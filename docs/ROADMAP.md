@@ -1,0 +1,8 @@
+# Roadmap
+1. Auth + billing
+2. Real TTS provider
+3. Avatar/scene generator
+4. Render queue with Redis/BullMQ
+5. Templates: motivation, product ads, explainers
+6. Stripe subscriptions
+7. Team workspace

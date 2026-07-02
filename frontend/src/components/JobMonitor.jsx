@@ -1,0 +1,66 @@
+import { useEffect, useState } from 'react';
+import { cancelJob, createJob, listJobs, retryJob } from '../api.js';
+
+export default function JobMonitor() {
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  async function refresh() {
+    setLoading(true);
+    try {
+      setJobs(await listJobs());
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function createDemoJob() {
+    const job = await createJob({
+      type: 'video_render',
+      title: 'Demo avatar render',
+      payload: { resolution: '1080x1920', format: 'mp4' }
+    });
+    setJobs(current => [job, ...current]);
+  }
+
+  async function action(handler, id) {
+    const updated = await handler(id);
+    setJobs(current => current.map(job => job.id === id ? updated : job));
+  }
+
+  useEffect(() => {
+    refresh();
+    const timer = setInterval(refresh, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <section className="card jobMonitor">
+      <div className="sectionHeader">
+        <div>
+          <h2>Render Job Monitor</h2>
+          <p>Background rendering, retry aur cancel status yahan track karo.</p>
+        </div>
+        <button type="button" onClick={createDemoJob}>Create Demo Job</button>
+      </div>
+
+      {loading && <p className="muted">Refreshing jobs...</p>}
+
+      <div className="jobList">
+        {jobs.map(job => (
+          <article className="jobCard" key={job.id}>
+            <div>
+              <strong>{job.title}</strong>
+              <span>{job.type} - {job.status} - {job.progress}%</span>
+            </div>
+            <progress value={job.progress} max="100" />
+            <div className="jobActions">
+              <button type="button" onClick={() => action(retryJob, job.id)}>Retry</button>
+              <button type="button" onClick={() => action(cancelJob, job.id)}>Cancel</button>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
