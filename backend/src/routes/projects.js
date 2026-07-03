@@ -10,6 +10,7 @@ import { applyTemplate } from '../services/templateService.js';
 import { optimizeCaption } from '../services/captionOptimizerService.js';
 import { buildProductionPack, finalizeProductionPack } from '../services/productionPackService.js';
 import { createScheduledPost } from '../services/schedulerService.js';
+import { getBrandKit } from '../services/brandKitService.js';
 
 const router = Router();
 
@@ -30,6 +31,7 @@ function exportPayload(project) {
     metadata: project.exportMetadata || null,
     exportMetadata: project.exportMetadata || null,
     captionResult: project.captionResult || null,
+    brandKit: project.brandKit || null,
     productionPack: project.productionPack || null,
     avatarJob: project.avatarJob || null,
     visualAssets: project.visualAssets || [],
@@ -56,6 +58,21 @@ function captionForSchedule(project) {
   return [caption, hashtags.join(' ')].filter(Boolean).join('\n\n');
 }
 
+function exportBrandSnapshot(brandKit = {}) {
+  return {
+    id: brandKit.id,
+    name: brandKit.name,
+    colors: {
+      primary: brandKit.primaryColor,
+      secondary: brandKit.secondaryColor,
+      accent: brandKit.accentColor
+    },
+    fontFamily: brandKit.fontFamily,
+    subtitleStyle: brandKit.subtitleStyle,
+    watermark: brandKit.watermark
+  };
+}
+
 function buildExportPackage(project) {
   return {
     id: project.id,
@@ -69,6 +86,7 @@ function buildExportPackage(project) {
     subtitlesUrl: project.subtitlesUrl,
     exportMetadata: project.exportMetadata || null,
     captionResult: project.captionResult || null,
+    brandKit: project.brandKit || null,
     productionPack: project.productionPack || null,
     scenes: project.scenes || [],
     visualAssets: project.visualAssets || [],
@@ -107,6 +125,7 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
   try {
     updateProject(projectId, { status: 'scripting', progress: 15 });
     updateJob(jobId, { status: 'scripting', progress: 15, attempts: 1 });
+    const brandKit = getBrandKit(userId);
     const scriptResult = await generateVideoScript(input);
     const captionResult = optimizeCaption({
       title: input.title,
@@ -117,7 +136,7 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
       tone: input.tone,
       hook: scriptResult.hook
     });
-    const productionPack = buildProductionPack({ input, scriptResult });
+    const productionPack = buildProductionPack({ input, scriptResult, brandKit });
 
     updateProject(projectId, {
       status: 'rendering',
@@ -125,6 +144,7 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
       script: scriptResult.script,
       scriptResult,
       captionResult,
+      brandKit: exportBrandSnapshot(brandKit),
       productionPack,
       avatarJob: productionPack.avatarJob,
       visualAssets: productionPack.visualAssets,
@@ -138,7 +158,8 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
 
     const exportResult = await renderVideo({
       script: scriptResult.script,
-      title: input.title || scriptResult.title
+      title: input.title || scriptResult.title,
+      brandKit
     });
 
     const exportMetadata = {
@@ -152,6 +173,8 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
       templateId: input.templateId || null,
       sceneCount: scriptResult.scenes.length,
       durationSeconds: scriptResult.totalDurationSeconds,
+      brandKit: exportResult.brand || exportBrandSnapshot(brandKit),
+      renderWarning: exportResult.renderWarning || null,
       generatedAt: new Date().toISOString()
     };
     const finalProductionPack = finalizeProductionPack(productionPack, exportResult, exportMetadata);
@@ -261,6 +284,7 @@ router.post('/:id/retry', (req, res) => {
     exportId: null,
     exportMetadata: null,
     captionResult: null,
+    brandKit: null,
     productionPack: null,
     avatarJob: null,
     visualAssets: []

@@ -331,6 +331,8 @@ function App() {
                   <span>{activeProject.exportMetadata.resolution}</span>
                   <span>{activeProject.exportMetadata.durationSeconds}s</span>
                   <span>{activeProject.exportMetadata.sceneCount} scenes</span>
+                  {activeProject.exportMetadata.brandKit?.name && <span>Brand: {activeProject.exportMetadata.brandKit.name}</span>}
+                  {activeProject.exportMetadata.brandKit?.watermark?.enabled && <span>Watermark on</span>}
                   {(activeProject.scheduledPostIds?.length || 0) > 0 && <span>{activeProject.scheduledPostIds.length} scheduled</span>}
                 </div>
               )}
@@ -341,6 +343,7 @@ function App() {
                     <span>Avatar: {activeProject.productionPack.avatarJob?.avatar?.name || activeProject.avatarId}</span>
                     <span>Voice: {activeProject.productionPack.voiceover?.voiceId || activeProject.voiceId}</span>
                     <span>Assets: {activeProject.productionPack.visualAssets?.length || 0}</span>
+                    {activeProject.productionPack.renderPlan?.brand?.name && <span>Brand: {activeProject.productionPack.renderPlan.brand.name}</span>}
                     <span>Status: {activeProject.productionPack.status}</span>
                   </div>
                   <div className="checklist">

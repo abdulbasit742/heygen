@@ -13,7 +13,8 @@ HeyGen-style MVP for prompt-to-video workflows. The app includes a React dashboa
 - Auto captions, hashtags, and export metadata saved per project
 - Production pack saved per project with avatar job, voiceover manifest, scene assets, and export checklist
 - Export package manifest download and one-click scheduling from completed projects
-- Brand kit editor for logo, colors, fonts, and watermark settings
+- Brand-aware renders with saved colors, subtitle styling, and watermark metadata
+- Brand kit editor for logo, colors, fonts, subtitle styling, and watermark settings
 - Media library metadata manager
 - Caption optimizer with hooks, CTAs, and hashtags
 - Analytics dashboard for project and export counts

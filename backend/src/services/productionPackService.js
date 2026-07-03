@@ -18,11 +18,22 @@ function buildStyle(input = {}) {
   ].filter(Boolean).join(', ');
 }
 
+function brandRenderSummary(brandKit = {}) {
+  if (!brandKit.id && !brandKit.name) return null;
+  return {
+    id: brandKit.id,
+    name: brandKit.name,
+    primaryColor: brandKit.primaryColor,
+    accentColor: brandKit.accentColor,
+    watermarkEnabled: Boolean(brandKit.watermark?.enabled)
+  };
+}
+
 function updateChecklist(checklist, id, done) {
   return checklist.map(item => item.id === id ? { ...item, done } : item);
 }
 
-export function buildProductionPack({ input = {}, scriptResult }) {
+export function buildProductionPack({ input = {}, scriptResult, brandKit }) {
   const avatarId = resolveAvatarId(input.avatarId || input.avatar || DEFAULT_AVATAR_ID);
   const voiceId = input.voiceId || input.voice || DEFAULT_VOICE_ID;
   const avatarJob = buildAvatarJob({
@@ -51,6 +62,7 @@ export function buildProductionPack({ input = {}, scriptResult }) {
       aspectRatio: '9:16',
       resolution: '1080x1920',
       subtitles: true,
+      brand: brandRenderSummary(brandKit),
       sceneCount: scriptResult.scenes.length,
       targetPlatform: input.platform || 'instagram_reels'
     },

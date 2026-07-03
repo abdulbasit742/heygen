@@ -8,6 +8,8 @@ const DEFAULT_FORM = {
   secondaryColor: '#22c55e',
   accentColor: '#f97316',
   fontFamily: 'Inter',
+  subtitleTextColor: '#ffffff',
+  subtitleFontSize: 54,
   watermarkText: 'AI Avatar Studio',
   watermarkEnabled: true
 };
@@ -26,6 +28,8 @@ export default function BrandKitPanel({ onApply }) {
         secondaryColor: brandKit.secondaryColor,
         accentColor: brandKit.accentColor,
         fontFamily: brandKit.fontFamily,
+        subtitleTextColor: brandKit.subtitleStyle?.textColor || '#ffffff',
+        subtitleFontSize: brandKit.subtitleStyle?.fontSize || 54,
         watermarkText: brandKit.watermark?.text || 'AI Avatar Studio',
         watermarkEnabled: Boolean(brandKit.watermark?.enabled)
       }))
@@ -49,6 +53,11 @@ export default function BrandKitPanel({ onApply }) {
         secondaryColor: form.secondaryColor,
         accentColor: form.accentColor,
         fontFamily: form.fontFamily,
+        subtitleStyle: {
+          textColor: form.subtitleTextColor,
+          fontSize: Number(form.subtitleFontSize) || 54,
+          position: 'bottom'
+        },
         watermark: {
           enabled: form.watermarkEnabled,
           text: form.watermarkText,
@@ -89,6 +98,17 @@ export default function BrandKitPanel({ onApply }) {
           <option>Montserrat</option>
           <option>Arial</option>
         </select>
+
+        <div className="row">
+          <div>
+            <label>Subtitle Color</label>
+            <input type="color" value={form.subtitleTextColor} onChange={event => update('subtitleTextColor', event.target.value)} />
+          </div>
+          <div>
+            <label>Subtitle Size</label>
+            <input type="number" min="24" max="82" value={form.subtitleFontSize} onChange={event => update('subtitleFontSize', Number(event.target.value))} />
+          </div>
+        </div>
 
         <label>Watermark Text</label>
         <input value={form.watermarkText} onChange={event => update('watermarkText', event.target.value)} />
