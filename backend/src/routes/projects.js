@@ -9,6 +9,7 @@ import { createJob, updateJob } from '../services/jobQueueService.js';
 import { applyTemplate } from '../services/templateService.js';
 import { optimizeCaption } from '../services/captionOptimizerService.js';
 import { buildProductionPack, finalizeProductionPack } from '../services/productionPackService.js';
+import { createScheduledPost } from '../services/schedulerService.js';
 
 const router = Router();
 
@@ -32,8 +33,52 @@ function exportPayload(project) {
     productionPack: project.productionPack || null,
     avatarJob: project.avatarJob || null,
     visualAssets: project.visualAssets || [],
+    scheduledPostIds: project.scheduledPostIds || [],
     scenes: project.scenes || [],
     completedAt: project.completedAt || null
+  };
+}
+
+function defaultScheduleTargets(platform) {
+  const platformMap = {
+    instagram_reels: 'instagram_business',
+    youtube_shorts: 'youtube_shorts',
+    tiktok: 'tiktok_business',
+    facebook_reels: 'facebook_page'
+  };
+
+  return [{ platform: platformMap[platform] || 'instagram_business', accountId: 'official-account' }];
+}
+
+function captionForSchedule(project) {
+  const caption = project.captionResult?.caption || project.scriptResult?.captions?.[0] || `${project.title} is ready.`;
+  const hashtags = project.captionResult?.hashtags || project.scriptResult?.hashtags || [];
+  return [caption, hashtags.join(' ')].filter(Boolean).join('\n\n');
+}
+
+function buildExportPackage(project) {
+  return {
+    id: project.id,
+    title: project.title,
+    prompt: project.prompt,
+    platform: project.platform,
+    language: project.language,
+    tone: project.tone,
+    status: project.status,
+    outputUrl: project.outputUrl,
+    subtitlesUrl: project.subtitlesUrl,
+    exportMetadata: project.exportMetadata || null,
+    captionResult: project.captionResult || null,
+    productionPack: project.productionPack || null,
+    scenes: project.scenes || [],
+    visualAssets: project.visualAssets || [],
+    schedulerDefaults: {
+      title: project.title,
+      caption: captionForSchedule(project),
+      mediaUrl: project.outputUrl,
+      targets: defaultScheduleTargets(project.platform)
+    },
+    generatedAt: new Date().toISOString()
   };
 }
 
@@ -175,6 +220,12 @@ router.get('/:id/export', (req, res) => {
   return res.json({ export: exportPayload(project) });
 });
 
+router.get('/:id/package', (req, res) => {
+  const project = getProject(req.params.id);
+  if (!ensureOwner(project, req.user.id)) return res.status(404).json({ error: 'Project not found.' });
+  return res.json({ package: buildExportPackage(project) });
+});
+
 router.get('/:id', (req, res) => {
   const project = getProject(req.params.id);
   if (!project) return res.status(404).json({ error: 'Project not found.' });
@@ -216,6 +267,32 @@ router.post('/:id/retry', (req, res) => {
   });
   const job = startProjectJob(req.user.id, resetProject, retryInput);
   return res.json({ project: { ...resetProject, jobId: job.id }, job });
+});
+
+router.post('/:id/schedule', (req, res) => {
+  try {
+    const project = getProject(req.params.id);
+    if (!ensureOwner(project, req.user.id)) return res.status(404).json({ error: 'Project not found.' });
+    if (project.status !== 'completed' || !project.outputUrl) {
+      return res.status(409).json({ error: 'Project must be completed before scheduling.' });
+    }
+
+    const post = createScheduledPost(req.user.id, {
+      title: req.body.title || project.title,
+      caption: req.body.caption || captionForSchedule(project),
+      mediaUrl: req.body.mediaUrl || project.outputUrl,
+      scheduledAt: req.body.scheduledAt || new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      timezone: req.body.timezone || 'UTC',
+      targets: req.body.targets || defaultScheduleTargets(project.platform),
+      notes: req.body.notes || `Scheduled from project ${project.id}`
+    });
+    const scheduledPostIds = [...new Set([...(project.scheduledPostIds || []), post.id])];
+    const updatedProject = updateProject(project.id, { scheduledPostIds });
+
+    return res.status(201).json({ post, project: updatedProject });
+  } catch (error) {
+    return res.status(400).json({ error: error.message || 'Schedule create failed.' });
+  }
 });
 
 router.delete('/:id', (req, res) => {

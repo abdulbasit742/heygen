@@ -12,6 +12,7 @@ HeyGen-style MVP for prompt-to-video workflows. The app includes a React dashboa
 - Project retry and render job linkage
 - Auto captions, hashtags, and export metadata saved per project
 - Production pack saved per project with avatar job, voiceover manifest, scene assets, and export checklist
+- Export package manifest download and one-click scheduling from completed projects
 - Brand kit editor for logo, colors, fonts, and watermark settings
 - Media library metadata manager
 - Caption optimizer with hooks, CTAs, and hashtags
@@ -50,6 +51,8 @@ npm start
 - `POST /api/projects`
 - `POST /api/projects/:id/retry`
 - `GET /api/projects/:id/export`
+- `GET /api/projects/:id/package`
+- `POST /api/projects/:id/schedule`
 - `DELETE /api/projects/:id`
 - `GET /api/templates`
 - `POST /api/scene-assets`

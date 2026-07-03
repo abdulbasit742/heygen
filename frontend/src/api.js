@@ -75,6 +75,16 @@ export async function getProjectExport(id) {
   return data.export;
 }
 
+export async function getProjectPackage(id) {
+  const { data } = await api.get(`/projects/${id}/package`);
+  return data.package;
+}
+
+export async function scheduleProject(id, payload = {}) {
+  const { data } = await api.post(`/projects/${id}/schedule`, payload);
+  return data;
+}
+
 export async function listTemplates() {
   const { data } = await api.get('/templates');
   return data.templates;

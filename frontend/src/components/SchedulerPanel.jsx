@@ -115,7 +115,7 @@ export default function SchedulerPanel() {
         {posts.map(post => (
           <article className="projectItem schedulerItem" key={post.id}>
             <strong>{post.title}</strong>
-            <span>{post.status} · {new Date(post.scheduledAt).toLocaleString()}</span>
+            <span>{post.status} - {new Date(post.scheduledAt).toLocaleString()}</span>
             <small>{post.targets.map(target => target.platform).join(', ')}</small>
             <div className="actions">
               <button type="button" onClick={() => publish(post.id)}>Mock Publish</button>

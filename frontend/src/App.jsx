@@ -12,7 +12,7 @@ import JobMonitor from './components/JobMonitor.jsx';
 import SchedulerPanel from './components/SchedulerPanel.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
 import ScenePreviewList from './components/ScenePreviewList.jsx';
-import { createProject, deleteProject, getProject, listProjects, listTemplates, loadStoredAuth, resolveAssetUrl, retryProject, setAuthToken } from './api.js';
+import { createProject, deleteProject, getProject, getProjectPackage, listProjects, listTemplates, loadStoredAuth, resolveAssetUrl, retryProject, scheduleProject, setAuthToken } from './api.js';
 import './style.css';
 
 const DEFAULT_PROMPT = 'Create a 30 second motivational avatar video about discipline and success.';
@@ -35,6 +35,7 @@ function App() {
   const [activeProject, setActiveProject] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [projectMessage, setProjectMessage] = useState('');
   const [auth, setAuth] = useState(() => loadStoredAuth());
 
   const completedCount = useMemo(
@@ -100,6 +101,7 @@ function App() {
     event.preventDefault();
     setLoading(true);
     setError('');
+    setProjectMessage('');
 
     try {
       const project = await createProject(form);
@@ -116,6 +118,7 @@ function App() {
     if (!activeProject) return;
     setLoading(true);
     setError('');
+    setProjectMessage('');
 
     try {
       const project = await retryProject(activeProject.id);
@@ -132,6 +135,33 @@ function App() {
     await deleteProject(projectId);
     setProjects(current => current.filter(project => project.id !== projectId));
     if (activeProject?.id === projectId) setActiveProject(null);
+  }
+
+  async function downloadProjectPackage() {
+    if (!activeProject) return;
+    setProjectMessage('');
+    const exportPackage = await getProjectPackage(activeProject.id);
+    const blob = new Blob([JSON.stringify(exportPackage, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${activeProject.title.replace(/[^a-z0-9]+/gi, '_')}_export_package.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setProjectMessage('Export package manifest ready.');
+  }
+
+  async function scheduleActiveProject() {
+    if (!activeProject) return;
+    setProjectMessage('');
+    try {
+      const result = await scheduleProject(activeProject.id);
+      setActiveProject(result.project);
+      setProjects(current => current.map(project => project.id === result.project.id ? result.project : project));
+      setProjectMessage(`Scheduled post created: ${result.post.title}`);
+    } catch (err) {
+      setProjectMessage(err.response?.data?.error || 'Schedule create nahi ho saka.');
+    }
   }
 
   function handleAuth(result) {
@@ -277,9 +307,14 @@ function App() {
               {activeProject.outputUrl && (
                 <div className="exportPreview">
                   <video src={resolveAssetUrl(activeProject.outputUrl)} controls playsInline />
-                  <a className="download" href={resolveAssetUrl(activeProject.outputUrl)} target="_blank" rel="noreferrer">Open Export</a>
+                  <div className="inlineActions">
+                    <a className="download" href={resolveAssetUrl(activeProject.outputUrl)} target="_blank" rel="noreferrer">Open Export</a>
+                    <button type="button" onClick={downloadProjectPackage}>Download Package</button>
+                    <button type="button" onClick={scheduleActiveProject}>Schedule Export</button>
+                  </div>
                 </div>
               )}
+              {projectMessage && <p className="success">{projectMessage}</p>}
               {activeProject.captionResult && (
                 <div className="captionSummary">
                   <strong>Caption</strong>
@@ -296,6 +331,7 @@ function App() {
                   <span>{activeProject.exportMetadata.resolution}</span>
                   <span>{activeProject.exportMetadata.durationSeconds}s</span>
                   <span>{activeProject.exportMetadata.sceneCount} scenes</span>
+                  {(activeProject.scheduledPostIds?.length || 0) > 0 && <span>{activeProject.scheduledPostIds.length} scheduled</span>}
                 </div>
               )}
               {activeProject.productionPack && (
