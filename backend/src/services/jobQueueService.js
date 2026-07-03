@@ -8,7 +8,7 @@ function persistJobs() {
   saveMap(STORE_FILE, jobs);
 }
 
-const VALID_STATUSES = ['queued', 'processing', 'completed', 'failed', 'cancelled'];
+const VALID_STATUSES = ['queued', 'scripting', 'processing', 'rendering', 'completed', 'failed', 'cancelled'];
 
 function now() {
   return new Date().toISOString();

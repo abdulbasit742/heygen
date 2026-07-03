@@ -11,7 +11,7 @@ import AnalyticsDashboard from './components/AnalyticsDashboard.jsx';
 import JobMonitor from './components/JobMonitor.jsx';
 import SchedulerPanel from './components/SchedulerPanel.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
-import { createProject, getProject, listProjects, loadStoredAuth, resolveAssetUrl, setAuthToken } from './api.js';
+import { createProject, getProject, listProjects, loadStoredAuth, resolveAssetUrl, retryProject, setAuthToken } from './api.js';
 import './style.css';
 
 const DEFAULT_PROMPT = 'Create a 30 second motivational avatar video about discipline and success.';
@@ -77,6 +77,22 @@ function App() {
       setProjects(current => [project, ...current]);
     } catch (err) {
       setError(err.response?.data?.error || 'Project create nahi ho saka. Backend check karo.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function retryActiveProject() {
+    if (!activeProject) return;
+    setLoading(true);
+    setError('');
+
+    try {
+      const project = await retryProject(activeProject.id);
+      setActiveProject(project);
+      setProjects(current => current.map(item => item.id === project.id ? project : item));
+    } catch (err) {
+      setError(err.response?.data?.error || 'Project retry nahi ho saka.');
     } finally {
       setLoading(false);
     }
@@ -197,6 +213,12 @@ function App() {
               </div>
               <p className="status">{activeProject.status} - {activeProject.progress || 0}%</p>
               {activeProject.error && <p className="error">{activeProject.error}</p>}
+              {activeProject.status === 'failed' && (
+                <button type="button" onClick={retryActiveProject} disabled={loading}>
+                  {loading ? 'Retrying...' : 'Retry Render'}
+                </button>
+              )}
+              {activeProject.jobId && <p className="muted">Render job: {activeProject.jobId}</p>}
               {activeProject.outputUrl && (
                 <div className="exportPreview">
                   <video src={resolveAssetUrl(activeProject.outputUrl)} controls playsInline />

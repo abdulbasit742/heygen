@@ -7,7 +7,8 @@ HeyGen-style MVP for prompt-to-video workflows. The app includes a React dashboa
 - Email/password signup and login with JWT sessions
 - Prompt-to-script and AI scene plan endpoints
 - Avatar picker and safe avatar job placeholder
-- Project creation with progress simulation
+- Project creation with generated script, scenes, render job tracking, and MP4 export
+- Project retry and render job linkage
 - Brand kit editor for logo, colors, fonts, and watermark settings
 - Media library metadata manager
 - Caption optimizer with hooks, CTAs, and hashtags
@@ -44,6 +45,7 @@ npm start
 
 - `POST /api/auth/signup`
 - `POST /api/projects`
+- `POST /api/projects/:id/retry`
 - `POST /api/scripts`
 - `POST /api/ai-script`
 - `POST /api/render`

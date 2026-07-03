@@ -60,6 +60,11 @@ export async function getProject(id) {
   return data.project;
 }
 
+export async function retryProject(id) {
+  const { data } = await api.post(`/projects/${id}/retry`);
+  return data.project;
+}
+
 
 export async function listPlans() {
   const { data } = await api.get('/billing/plans');

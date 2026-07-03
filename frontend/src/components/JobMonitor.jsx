@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { cancelJob, createJob, listJobs, retryJob } from '../api.js';
+import { cancelJob, createJob, listJobs, resolveAssetUrl, retryJob, retryProject } from '../api.js';
 
 export default function JobMonitor() {
   const [jobs, setJobs] = useState([]);
@@ -26,6 +26,16 @@ export default function JobMonitor() {
   async function action(handler, id) {
     const updated = await handler(id);
     setJobs(current => current.map(job => job.id === id ? updated : job));
+  }
+
+  async function retry(job) {
+    if (job.projectId) {
+      await retryProject(job.projectId);
+      await refresh();
+      return;
+    }
+
+    await action(retryJob, job.id);
   }
 
   useEffect(() => {
@@ -55,8 +65,13 @@ export default function JobMonitor() {
             </div>
             <progress value={job.progress} max="100" />
             <div className="jobActions">
-              <button type="button" onClick={() => action(retryJob, job.id)}>Retry</button>
+              <button type="button" onClick={() => retry(job)}>Retry</button>
               <button type="button" onClick={() => action(cancelJob, job.id)}>Cancel</button>
+              {job.result?.exportUrl && (
+                <a className="download smallDownload" href={resolveAssetUrl(job.result.exportUrl)} target="_blank" rel="noreferrer">
+                  Export
+                </a>
+              )}
             </div>
           </article>
         ))}
