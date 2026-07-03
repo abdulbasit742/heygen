@@ -11,6 +11,7 @@ import { optimizeCaption } from '../services/captionOptimizerService.js';
 import { buildProductionPack, finalizeProductionPack } from '../services/productionPackService.js';
 import { createScheduledPost } from '../services/schedulerService.js';
 import { getBrandKit } from '../services/brandKitService.js';
+import { generateVoiceover } from '../services/voiceoverService.js';
 
 const router = Router();
 
@@ -32,6 +33,7 @@ function exportPayload(project) {
     exportMetadata: project.exportMetadata || null,
     captionResult: project.captionResult || null,
     brandKit: project.brandKit || null,
+    voiceover: project.voiceover || null,
     productionPack: project.productionPack || null,
     avatarJob: project.avatarJob || null,
     visualAssets: project.visualAssets || [],
@@ -87,6 +89,7 @@ function buildExportPackage(project) {
     exportMetadata: project.exportMetadata || null,
     captionResult: project.captionResult || null,
     brandKit: project.brandKit || null,
+    voiceover: project.voiceover || null,
     productionPack: project.productionPack || null,
     scenes: project.scenes || [],
     visualAssets: project.visualAssets || [],
@@ -136,7 +139,25 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
       tone: input.tone,
       hook: scriptResult.hook
     });
-    const productionPack = buildProductionPack({ input, scriptResult, brandKit });
+    updateProject(projectId, {
+      status: 'voiceover',
+      progress: 35,
+      script: scriptResult.script,
+      scriptResult,
+      captionResult,
+      brandKit: exportBrandSnapshot(brandKit),
+      scenes: scriptResult.scenes
+    });
+    updateJob(jobId, { status: 'voiceover', progress: 35 });
+
+    const voiceover = await generateVoiceover({
+      script: scriptResult.script,
+      voiceId: input.voiceId,
+      language: input.language,
+      durationSeconds: scriptResult.totalDurationSeconds,
+      title: input.title || scriptResult.title
+    });
+    const productionPack = buildProductionPack({ input, scriptResult, brandKit, voiceover });
 
     updateProject(projectId, {
       status: 'rendering',
@@ -145,6 +166,7 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
       scriptResult,
       captionResult,
       brandKit: exportBrandSnapshot(brandKit),
+      voiceover,
       productionPack,
       avatarJob: productionPack.avatarJob,
       visualAssets: productionPack.visualAssets,
@@ -153,7 +175,7 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
     updateJob(jobId, {
       status: 'rendering',
       progress: 55,
-      payload: { ...input, script: scriptResult.script, scenes: scriptResult.scenes, captionResult, productionPack }
+      payload: { ...input, script: scriptResult.script, scenes: scriptResult.scenes, captionResult, voiceover, productionPack }
     });
 
     const exportResult = await renderVideo({
@@ -174,6 +196,9 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
       sceneCount: scriptResult.scenes.length,
       durationSeconds: scriptResult.totalDurationSeconds,
       brandKit: exportResult.brand || exportBrandSnapshot(brandKit),
+      voiceoverUrl: voiceover.audioUrl,
+      voiceoverManifestUrl: voiceover.manifestUrl,
+      voiceoverProvider: voiceover.provider,
       renderWarning: exportResult.renderWarning || null,
       generatedAt: new Date().toISOString()
     };
@@ -187,6 +212,7 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
       subtitlesUrl: exportResult.subtitles,
       exportId: exportResult.id,
       exportMetadata,
+      voiceover,
       productionPack: finalProductionPack,
       avatarJob: finalProductionPack.avatarJob,
       visualAssets: finalProductionPack.visualAssets,
@@ -200,6 +226,7 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
         exportUrl: exportResult.url,
         subtitlesUrl: exportResult.subtitles,
         captionResult,
+        voiceover,
         productionPack: finalProductionPack,
         ...exportMetadata
       }
@@ -285,6 +312,7 @@ router.post('/:id/retry', (req, res) => {
     exportMetadata: null,
     captionResult: null,
     brandKit: null,
+    voiceover: null,
     productionPack: null,
     avatarJob: null,
     visualAssets: []

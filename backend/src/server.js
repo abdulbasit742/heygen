@@ -19,6 +19,7 @@ import captionRoutes from './routes/captions.js';
 import schedulerRoutes from './routes/scheduler.js';
 import settingsRoutes from './routes/settings.js';
 import jobsRoutes from './routes/jobs.js';
+import voiceoverRoutes from './routes/voiceover.js';
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ app.use('/api/captions', captionRoutes);
 app.use('/api/scheduler', schedulerRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/jobs', jobsRoutes);
+app.use('/api/voiceover', voiceoverRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/scripts', scriptRoutes);
 app.use('/api/ai-script', aiScriptRoutes);

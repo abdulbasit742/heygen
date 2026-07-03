@@ -231,7 +231,8 @@
 
 .captionSummary,
 .exportMeta,
-.productionPack {
+.productionPack,
+.voicePreview {
   border: 1px solid #26324a;
   background: #111827;
   border-radius: 14px;
@@ -242,6 +243,15 @@
 .captionSummary p {
   white-space: pre-wrap;
   color: #dbeafe;
+}
+
+.voicePreview {
+  display: grid;
+  gap: 12px;
+}
+
+.voicePreview audio {
+  width: 100%;
 }
 
 .exportMeta {

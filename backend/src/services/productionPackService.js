@@ -33,7 +33,7 @@ function updateChecklist(checklist, id, done) {
   return checklist.map(item => item.id === id ? { ...item, done } : item);
 }
 
-export function buildProductionPack({ input = {}, scriptResult, brandKit }) {
+export function buildProductionPack({ input = {}, scriptResult, brandKit, voiceover }) {
   const avatarId = resolveAvatarId(input.avatarId || input.avatar || DEFAULT_AVATAR_ID);
   const voiceId = input.voiceId || input.voice || DEFAULT_VOICE_ID;
   const avatarJob = buildAvatarJob({
@@ -51,7 +51,7 @@ export function buildProductionPack({ input = {}, scriptResult, brandKit }) {
     status: 'assets_ready',
     avatarJob,
     visualAssets,
-    voiceover: {
+    voiceover: voiceover || {
       provider: 'mock_tts_manifest',
       voiceId: avatarJob.voice,
       language: input.language || 'English',
@@ -69,7 +69,7 @@ export function buildProductionPack({ input = {}, scriptResult, brandKit }) {
     checklist: [
       { id: 'script', label: 'Script generated', done: true },
       { id: 'avatar', label: 'Avatar job prepared', done: true },
-      { id: 'voiceover', label: 'Voiceover manifest prepared', done: true },
+      { id: 'voiceover', label: voiceover?.audioUrl ? 'Voiceover audio prepared' : 'Voiceover manifest prepared', done: Boolean(voiceover?.audioUrl) },
       { id: 'visuals', label: 'Scene asset manifests prepared', done: visualAssets.length > 0 },
       { id: 'export', label: 'MP4 export rendered', done: false }
     ],

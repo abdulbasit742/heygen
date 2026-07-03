@@ -12,7 +12,7 @@ import JobMonitor from './components/JobMonitor.jsx';
 import SchedulerPanel from './components/SchedulerPanel.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
 import ScenePreviewList from './components/ScenePreviewList.jsx';
-import { createProject, deleteProject, getProject, getProjectPackage, listProjects, listTemplates, loadStoredAuth, resolveAssetUrl, retryProject, scheduleProject, setAuthToken } from './api.js';
+import { createProject, deleteProject, getProject, getProjectPackage, listProjects, listTemplates, listVoices, loadStoredAuth, resolveAssetUrl, retryProject, scheduleProject, setAuthToken } from './api.js';
 import './style.css';
 
 const DEFAULT_PROMPT = 'Create a 30 second motivational avatar video about discipline and success.';
@@ -32,6 +32,7 @@ function App() {
   });
   const [projects, setProjects] = useState([]);
   const [templates, setTemplates] = useState([]);
+  const [voices, setVoices] = useState([]);
   const [activeProject, setActiveProject] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -52,6 +53,18 @@ function App() {
   useEffect(() => {
     if (auth.user) refreshProjects();
   }, [auth.user]);
+
+  useEffect(() => {
+    if (!auth.user) return;
+    listVoices(form.language)
+      .then(nextVoices => {
+        setVoices(nextVoices);
+        if (nextVoices.length && !nextVoices.some(voice => voice.id === form.voice)) {
+          updateField('voice', nextVoices[0].id);
+        }
+      })
+      .catch(() => setVoices([]));
+  }, [auth.user, form.language]);
 
   useEffect(() => {
     if (!activeProject || ['completed', 'failed'].includes(activeProject.status)) return undefined;
@@ -257,9 +270,15 @@ function App() {
             <div>
               <label>Voice</label>
               <select value={form.voice} onChange={event => updateField('voice', event.target.value)}>
-                <option value="calm_male">Calm Male</option>
-                <option value="energetic_female">Energetic Female</option>
-                <option value="urdu_narrator">Urdu Narrator</option>
+                {voices.length ? voices.map(voice => (
+                  <option value={voice.id} key={voice.id}>{voice.name}</option>
+                )) : (
+                  <>
+                    <option value="calm_male">Calm Male</option>
+                    <option value="energetic_female">Energetic Female</option>
+                    <option value="urdu_narrator">Urdu Narrator</option>
+                  </>
+                )}
               </select>
             </div>
           </div>
@@ -315,6 +334,18 @@ function App() {
                 </div>
               )}
               {projectMessage && <p className="success">{projectMessage}</p>}
+              {activeProject.voiceover?.audioUrl && (
+                <div className="voicePreview">
+                  <strong>Voiceover</strong>
+                  <audio src={resolveAssetUrl(activeProject.voiceover.audioUrl)} controls />
+                  <div className="inlineActions">
+                    <a className="download smallDownload" href={resolveAssetUrl(activeProject.voiceover.audioUrl)} target="_blank" rel="noreferrer">Open Audio</a>
+                    {activeProject.voiceover.manifestUrl && (
+                      <a className="download smallDownload" href={resolveAssetUrl(activeProject.voiceover.manifestUrl)} target="_blank" rel="noreferrer">Voice Manifest</a>
+                    )}
+                  </div>
+                </div>
+              )}
               {activeProject.captionResult && (
                 <div className="captionSummary">
                   <strong>Caption</strong>
@@ -331,6 +362,7 @@ function App() {
                   <span>{activeProject.exportMetadata.resolution}</span>
                   <span>{activeProject.exportMetadata.durationSeconds}s</span>
                   <span>{activeProject.exportMetadata.sceneCount} scenes</span>
+                  {activeProject.exportMetadata.voiceoverProvider && <span>Voice: {activeProject.exportMetadata.voiceoverProvider}</span>}
                   {activeProject.exportMetadata.brandKit?.name && <span>Brand: {activeProject.exportMetadata.brandKit.name}</span>}
                   {activeProject.exportMetadata.brandKit?.watermark?.enabled && <span>Watermark on</span>}
                   {(activeProject.scheduledPostIds?.length || 0) > 0 && <span>{activeProject.scheduledPostIds.length} scheduled</span>}

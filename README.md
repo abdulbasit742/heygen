@@ -10,6 +10,7 @@ HeyGen-style MVP for prompt-to-video workflows. The app includes a React dashboa
 - Avatar picker and safe avatar job placeholder
 - Project creation with generated script, scenes, render job tracking, and MP4 export
 - Project retry and render job linkage
+- Voice preset API with generated mock TTS WAV audio and manifest per project
 - Auto captions, hashtags, and export metadata saved per project
 - Production pack saved per project with avatar job, voiceover manifest, scene assets, and export checklist
 - Export package manifest download and one-click scheduling from completed projects
@@ -56,6 +57,8 @@ npm start
 - `POST /api/projects/:id/schedule`
 - `DELETE /api/projects/:id`
 - `GET /api/templates`
+- `GET /api/voiceover/voices`
+- `POST /api/voiceover/preview`
 - `POST /api/scene-assets`
 - `POST /api/scripts`
 - `POST /api/ai-script`
@@ -74,7 +77,7 @@ Rendered videos and subtitles are written to `backend/storage` and served from `
 ## Production Connections To Add
 
 - Real LLM provider for scripts
-- Real TTS provider such as ElevenLabs, Azure TTS, or XTTS
+- Replace mock TTS audio with a real TTS provider such as ElevenLabs, Azure TTS, or XTTS
 - Real avatar/lip-sync/video provider
 - Production database persistence such as PostgreSQL or Supabase
 - Stripe, Paddle, Razorpay, or local payment provider webhooks

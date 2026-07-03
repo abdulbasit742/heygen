@@ -23,7 +23,7 @@ export function getAnalyticsSummary(userId) {
     totals: {
       projects: projects.length,
       completed: projects.filter(project => project.status === 'completed').length,
-      processing: projects.filter(project => ['queued', 'processing', 'rendering'].includes(project.status)).length,
+      processing: projects.filter(project => ['queued', 'processing', 'scripting', 'voiceover', 'rendering'].includes(project.status)).length,
       failed: projects.filter(project => project.status === 'failed').length,
       exports: exports.length,
       estimatedMinutes: Math.round(totalDurationSeconds / 60)

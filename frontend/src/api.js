@@ -113,6 +113,18 @@ export async function listAvatars(language) {
   return data.avatars;
 }
 
+export async function listVoices(language) {
+  const { data } = await api.get('/voiceover/voices', {
+    params: language ? { language } : {}
+  });
+  return data.voices;
+}
+
+export async function createVoicePreview(payload) {
+  const { data } = await api.post('/voiceover/preview', payload);
+  return data.voiceover;
+}
+
 export async function createAvatarJob(payload) {
   const { data } = await api.post('/avatars/job', payload);
   return data.job;
