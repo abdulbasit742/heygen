@@ -217,6 +217,52 @@
   font-size: 14px;
 }
 
+.captionSummary,
+.exportMeta {
+  border: 1px solid #26324a;
+  background: #111827;
+  border-radius: 14px;
+  padding: 14px;
+  margin-top: 14px;
+}
+
+.captionSummary p {
+  white-space: pre-wrap;
+  color: #dbeafe;
+}
+
+.exportMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.exportMeta span {
+  border-radius: 999px;
+  background: #0f172a;
+  color: #bfdbfe;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.projectRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.projectRow .projectItem {
+  margin-top: 0;
+}
+
+.dangerButton {
+  background: #451a1a;
+  color: #fecaca;
+  border: 1px solid #7f1d1d;
+  margin-top: 0;
+}
+
 .brandForm,
 .captionStudio,
 .jobMonitor {

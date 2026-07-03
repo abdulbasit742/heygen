@@ -17,7 +17,7 @@ function splitIntoScenes(script, maxScenes = DEFAULT_SCENE_COUNT) {
     scenes.push({
       order: index + 1,
       narration: sentence,
-      visualPrompt: `Vertical cinematic creator video scene: ${sentence}`,
+      visualPrompt: `Vertical creator video scene: ${sentence}`,
       subtitle: sentence.length > 72 ? `${sentence.slice(0, 69)}...` : sentence,
       durationSeconds: Math.max(4, Math.min(8, Math.ceil(sentence.length / 18)))
     });
@@ -28,9 +28,11 @@ function splitIntoScenes(script, maxScenes = DEFAULT_SCENE_COUNT) {
 
 function createFallbackScript(prompt, tone = 'motivational') {
   const topic = cleanText(prompt) || 'building a better online business';
-  const toneLine = tone === 'professional'
-    ? 'Here is the clear plan.'
-    : 'Here is the truth you need today.';
+  const toneLine = {
+    professional: 'Here is the clear plan.',
+    educational: 'Here is the simple explanation.',
+    friendly: 'Here is a helpful way to think about it.'
+  }[tone] || 'Here is the truth you need today.';
 
   return `${toneLine} ${topic} starts with one focused decision. Stop waiting for perfect conditions. Pick one useful skill, create one valuable piece of content, and publish it today. Improve the next version using real feedback. Repeat this process daily, because consistency turns small actions into trust, audience, and income.`;
 }
@@ -40,8 +42,9 @@ export async function generateVideoScript(input = {}) {
   const prompt = cleanText(input.prompt);
   const tone = cleanText(input.tone) || 'motivational';
   const platform = cleanText(input.platform) || 'instagram_reels';
+  const sceneCount = input.sceneCount || input.template?.sceneCount || DEFAULT_SCENE_COUNT;
   const script = cleanText(input.script) || createFallbackScript(prompt, tone);
-  const scenes = splitIntoScenes(script, input.sceneCount || DEFAULT_SCENE_COUNT);
+  const scenes = splitIntoScenes(script, sceneCount);
   const totalDurationSeconds = scenes.reduce((sum, scene) => sum + scene.durationSeconds, 0);
 
   return {
@@ -52,7 +55,7 @@ export async function generateVideoScript(input = {}) {
     script,
     scenes,
     captions: [
-      `${title} — save this and start today.`,
+      `${title} - save this and start today.`,
       `Your next step: ${prompt || 'create one useful video today'}.`,
       'Follow for more AI creator tools and online earning ideas.'
     ],

@@ -41,3 +41,9 @@ export function updateProject(id, patch) {
   persistProjects();
   return updated;
 }
+
+export function deleteProject(id) {
+  const deleted = projects.delete(id);
+  if (deleted) persistProjects();
+  return deleted;
+}

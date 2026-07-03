@@ -11,7 +11,7 @@ import AnalyticsDashboard from './components/AnalyticsDashboard.jsx';
 import JobMonitor from './components/JobMonitor.jsx';
 import SchedulerPanel from './components/SchedulerPanel.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
-import { createProject, getProject, listProjects, loadStoredAuth, resolveAssetUrl, retryProject, setAuthToken } from './api.js';
+import { createProject, deleteProject, getProject, listProjects, listTemplates, loadStoredAuth, resolveAssetUrl, retryProject, setAuthToken } from './api.js';
 import './style.css';
 
 const DEFAULT_PROMPT = 'Create a 30 second motivational avatar video about discipline and success.';
@@ -23,10 +23,14 @@ function App() {
     language: 'English',
     tone: 'cinematic',
     platform: 'instagram_reels',
+    templateId: 'motivation_reel',
+    niche: 'personal growth',
+    sceneCount: 5,
     avatar: 'studio_presenter',
     voice: 'calm_male'
   });
   const [projects, setProjects] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const [activeProject, setActiveProject] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -36,6 +40,12 @@ function App() {
     () => projects.filter(project => project.status === 'completed').length,
     [projects]
   );
+
+  useEffect(() => {
+    listTemplates()
+      .then(setTemplates)
+      .catch(() => setTemplates([]));
+  }, []);
 
   useEffect(() => {
     if (auth.user) refreshProjects();
@@ -59,6 +69,25 @@ function App() {
 
   function updateField(field, value) {
     setForm(current => ({ ...current, [field]: value }));
+  }
+
+  function applyTemplate(templateId) {
+    const template = templates.find(item => item.id === templateId);
+    if (!template) {
+      updateField('templateId', templateId);
+      return;
+    }
+
+    setForm(current => ({
+      ...current,
+      templateId,
+      title: template.title,
+      prompt: template.prompt,
+      platform: template.platform,
+      tone: template.tone,
+      niche: template.niche,
+      sceneCount: template.sceneCount
+    }));
   }
 
   async function refreshProjects() {
@@ -96,6 +125,12 @@ function App() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function removeProject(projectId) {
+    await deleteProject(projectId);
+    setProjects(current => current.filter(project => project.id !== projectId));
+    if (activeProject?.id === projectId) setActiveProject(null);
   }
 
   function handleAuth(result) {
@@ -145,6 +180,14 @@ function App() {
       <section className="grid">
         <form className="card" onSubmit={submitProject}>
           <h2>Create Video</h2>
+
+          <label>Template</label>
+          <select value={form.templateId} onChange={event => applyTemplate(event.target.value)}>
+            <option value="">Custom</option>
+            {templates.map(template => (
+              <option value={template.id} key={template.id}>{template.name}</option>
+            ))}
+          </select>
 
           <label>Title</label>
           <input value={form.title} onChange={event => updateField('title', event.target.value)} />
@@ -198,6 +241,17 @@ function App() {
             <option value="facebook_reels">Facebook Reels</option>
           </select>
 
+          <div className="row">
+            <div>
+              <label>Niche</label>
+              <input value={form.niche} onChange={event => updateField('niche', event.target.value)} />
+            </div>
+            <div>
+              <label>Scenes</label>
+              <input type="number" min="3" max="8" value={form.sceneCount} onChange={event => updateField('sceneCount', Number(event.target.value))} />
+            </div>
+          </div>
+
           {error && <p className="error">{error}</p>}
           <button disabled={loading}>{loading ? 'Creating...' : 'Create AI Video Project'}</button>
         </form>
@@ -223,6 +277,24 @@ function App() {
                 <div className="exportPreview">
                   <video src={resolveAssetUrl(activeProject.outputUrl)} controls playsInline />
                   <a className="download" href={resolveAssetUrl(activeProject.outputUrl)} target="_blank" rel="noreferrer">Open Export</a>
+                </div>
+              )}
+              {activeProject.captionResult && (
+                <div className="captionSummary">
+                  <strong>Caption</strong>
+                  <p>{activeProject.captionResult.caption}</p>
+                  <div className="tagWrap">
+                    {activeProject.captionResult.hashtags.map(tag => <span className="pill" key={tag}>{tag}</span>)}
+                  </div>
+                </div>
+              )}
+              {activeProject.exportMetadata && (
+                <div className="exportMeta">
+                  {activeProject.exportMetadata.fileName && <span>{activeProject.exportMetadata.fileName}</span>}
+                  <span>{activeProject.exportMetadata.format}</span>
+                  <span>{activeProject.exportMetadata.resolution}</span>
+                  <span>{activeProject.exportMetadata.durationSeconds}s</span>
+                  <span>{activeProject.exportMetadata.sceneCount} scenes</span>
                 </div>
               )}
               {activeProject.scriptResult?.scenes?.length > 0 && (
@@ -262,10 +334,13 @@ function App() {
         <h2>Recent Projects</h2>
         <div className="projectList">
           {projects.map(project => (
-            <button className="projectItem" key={project.id} onClick={() => setActiveProject(project)}>
-              <strong>{project.title}</strong>
-              <span>{project.status} - {project.progress || 0}%</span>
-            </button>
+            <article className="projectRow" key={project.id}>
+              <button className="projectItem" onClick={() => setActiveProject(project)}>
+                <strong>{project.title}</strong>
+                <span>{project.status} - {project.progress || 0}%</span>
+              </button>
+              <button type="button" className="dangerButton" onClick={() => removeProject(project.id)}>Delete</button>
+            </article>
           ))}
           {!projects.length && <p>Abhi koi project nahi.</p>}
         </div>

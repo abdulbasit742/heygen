@@ -65,6 +65,20 @@ export async function retryProject(id) {
   return data.project;
 }
 
+export async function deleteProject(id) {
+  const { data } = await api.delete(`/projects/${id}`);
+  return data;
+}
+
+export async function getProjectExport(id) {
+  const { data } = await api.get(`/projects/${id}/export`);
+  return data.export;
+}
+
+export async function listTemplates() {
+  const { data } = await api.get('/templates');
+  return data.templates;
+}
 
 export async function listPlans() {
   const { data } = await api.get('/billing/plans');
