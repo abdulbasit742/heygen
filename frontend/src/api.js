@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+export const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -36,6 +37,12 @@ export function loadStoredAuth() {
   const userRaw = localStorage.getItem('auth_user');
   if (token) setAuthToken(token);
   return { token, user: userRaw ? JSON.parse(userRaw) : null };
+}
+
+export function resolveAssetUrl(url) {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${API_ORIGIN}${url.startsWith('/') ? url : `/${url}`}`;
 }
 
 export async function createProject(payload) {

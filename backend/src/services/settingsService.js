@@ -1,3 +1,5 @@
+import { loadMap, saveMap } from './jsonFileStore.js';
+
 const DEFAULT_SETTINGS = {
   appName: 'AI Avatar Video Studio',
   defaultLanguage: 'English',
@@ -20,7 +22,12 @@ const DEFAULT_SETTINGS = {
   updatedAt: new Date().toISOString()
 };
 
-const settingsByUser = new Map();
+const STORE_FILE = 'settings.json';
+const settingsByUser = loadMap(STORE_FILE, 'userId');
+
+function persistSettings() {
+  saveMap(STORE_FILE, settingsByUser);
+}
 
 function normalizeBoolean(value, fallback) {
   if (typeof value === 'boolean') return value;
@@ -37,7 +44,8 @@ function normalizeNumber(value, fallback, min, max) {
 
 export function getSettings(userId = 'global') {
   if (!settingsByUser.has(userId)) {
-    settingsByUser.set(userId, { ...DEFAULT_SETTINGS });
+    settingsByUser.set(userId, { ...DEFAULT_SETTINGS, userId });
+    persistSettings();
   }
 
   return settingsByUser.get(userId);
@@ -62,6 +70,7 @@ export function updateSettings(userId = 'global', input = {}) {
   };
 
   settingsByUser.set(userId, next);
+  persistSettings();
   return next;
 }
 
@@ -86,7 +95,8 @@ export function getProviderStatus() {
 }
 
 export function resetSettings(userId = 'global') {
-  const reset = { ...DEFAULT_SETTINGS, updatedAt: new Date().toISOString() };
+  const reset = { ...DEFAULT_SETTINGS, userId, updatedAt: new Date().toISOString() };
   settingsByUser.set(userId, reset);
+  persistSettings();
   return reset;
 }

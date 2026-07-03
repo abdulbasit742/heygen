@@ -1,7 +1,18 @@
 import crypto from 'crypto';
+import { loadMap, saveMap } from './jsonFileStore.js';
 
-const workspaces = new Map();
-const invites = new Map();
+const WORKSPACE_FILE = 'workspaces.json';
+const INVITE_FILE = 'workspace-invites.json';
+const workspaces = loadMap(WORKSPACE_FILE);
+const invites = loadMap(INVITE_FILE);
+
+function persistWorkspaces() {
+  saveMap(WORKSPACE_FILE, workspaces);
+}
+
+function persistInvites() {
+  saveMap(INVITE_FILE, invites);
+}
 
 function now() {
   return new Date().toISOString();
@@ -42,6 +53,7 @@ export function getOrCreateDefaultWorkspace(user) {
   };
 
   workspaces.set(workspace.id, workspace);
+  persistWorkspaces();
   return workspace;
 }
 
@@ -67,6 +79,7 @@ export function updateWorkspace(workspaceId, updates = {}) {
   };
 
   workspaces.set(workspaceId, updated);
+  persistWorkspaces();
   return updated;
 }
 
@@ -93,6 +106,8 @@ export function inviteWorkspaceMember(workspaceId, input = {}) {
     invitedAt: invite.createdAt
   });
   workspace.updatedAt = now();
+  persistInvites();
+  persistWorkspaces();
 
   return invite;
 }
@@ -107,5 +122,6 @@ export function removeWorkspaceMember(workspaceId, email) {
 
   workspace.members = workspace.members.filter(member => member.email !== email || member.role === 'owner');
   workspace.updatedAt = now();
+  persistWorkspaces();
   return workspace;
 }

@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { readJson, writeJson } from './jsonFileStore.js';
 
 const ALLOWED_TYPES = new Set([
   'image/jpeg',
@@ -11,7 +12,7 @@ const ALLOWED_TYPES = new Set([
 
 const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024;
 
-const mediaItems = [
+const DEFAULT_MEDIA_ITEMS = [
   {
     id: 'stock_gradient_bg',
     ownerId: 'system',
@@ -46,6 +47,13 @@ const mediaItems = [
     createdAt: new Date().toISOString()
   }
 ];
+
+const STORE_FILE = 'media.json';
+const mediaItems = readJson(STORE_FILE, DEFAULT_MEDIA_ITEMS);
+
+function persistMediaItems() {
+  writeJson(STORE_FILE, mediaItems);
+}
 
 export function validateMediaInput(input = {}) {
   const name = String(input.name || '').trim();
@@ -93,6 +101,7 @@ export function addMedia(ownerId, input) {
   };
 
   mediaItems.unshift(media);
+  persistMediaItems();
   return media;
 }
 
@@ -104,5 +113,6 @@ export function deleteMedia(ownerId, id) {
   const index = mediaItems.findIndex(item => item.id === id && item.ownerId === ownerId);
   if (index === -1) return false;
   mediaItems.splice(index, 1);
+  persistMediaItems();
   return true;
 }

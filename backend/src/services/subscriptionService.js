@@ -1,3 +1,5 @@
+import { loadMap, saveMap } from './jsonFileStore.js';
+
 export const PLANS = {
   free: {
     id: 'free',
@@ -40,8 +42,18 @@ export const PLANS = {
   }
 };
 
-const subscriptions = new Map();
-const usage = new Map();
+const SUBSCRIPTION_FILE = 'subscriptions.json';
+const USAGE_FILE = 'usage.json';
+const subscriptions = loadMap(SUBSCRIPTION_FILE, 'userId');
+const usage = loadMap(USAGE_FILE, 'key');
+
+function persistSubscriptions() {
+  saveMap(SUBSCRIPTION_FILE, subscriptions);
+}
+
+function persistUsage() {
+  saveMap(USAGE_FILE, usage);
+}
 
 function currentMonthKey() {
   return new Date().toISOString().slice(0, 7);
@@ -64,6 +76,7 @@ export function getSubscription(userId) {
   };
 
   subscriptions.set(userId, subscription);
+  persistSubscriptions();
   return subscription;
 }
 
@@ -83,13 +96,15 @@ export function setSubscription(userId, planId) {
   };
 
   subscriptions.set(userId, subscription);
+  persistSubscriptions();
   return subscription;
 }
 
 export function getUsage(userId) {
   const key = `${userId}:${currentMonthKey()}`;
-  const existing = usage.get(key) || { projects: 0, exports: 0, month: currentMonthKey() };
+  const existing = usage.get(key) || { key, userId, projects: 0, exports: 0, month: currentMonthKey() };
   usage.set(key, existing);
+  persistUsage();
   return existing;
 }
 
@@ -110,5 +125,13 @@ export function canCreateProject(userId) {
 export function incrementProjectUsage(userId) {
   const userUsage = getUsage(userId);
   userUsage.projects += 1;
+  persistUsage();
+  return userUsage;
+}
+
+export function incrementExportUsage(userId) {
+  const userUsage = getUsage(userId);
+  userUsage.exports += 1;
+  persistUsage();
   return userUsage;
 }

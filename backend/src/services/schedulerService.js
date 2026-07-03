@@ -1,6 +1,12 @@
 import crypto from 'crypto';
+import { loadMap, saveMap } from './jsonFileStore.js';
 
-const scheduledPosts = new Map();
+const STORE_FILE = 'scheduled-posts.json';
+const scheduledPosts = loadMap(STORE_FILE);
+
+function persistScheduledPosts() {
+  saveMap(STORE_FILE, scheduledPosts);
+}
 
 const SUPPORTED_PLATFORMS = [
   'facebook_page',
@@ -65,6 +71,7 @@ export function createScheduledPost(ownerId, input = {}) {
   };
 
   scheduledPosts.set(post.id, post);
+  persistScheduledPosts();
   return post;
 }
 
@@ -82,6 +89,7 @@ export function updateScheduledPost(id, input = {}) {
   if (input.scheduledAt) next.scheduledAt = new Date(input.scheduledAt).toISOString();
 
   scheduledPosts.set(id, next);
+  persistScheduledPosts();
   return next;
 }
 

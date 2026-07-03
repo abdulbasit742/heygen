@@ -11,7 +11,7 @@ import AnalyticsDashboard from './components/AnalyticsDashboard.jsx';
 import JobMonitor from './components/JobMonitor.jsx';
 import SchedulerPanel from './components/SchedulerPanel.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
-import { createProject, getProject, listProjects, loadStoredAuth, setAuthToken } from './api.js';
+import { createProject, getProject, listProjects, loadStoredAuth, resolveAssetUrl, setAuthToken } from './api.js';
 import './style.css';
 
 const DEFAULT_PROMPT = 'Create a 30 second motivational avatar video about discipline and success.';
@@ -38,11 +38,11 @@ function App() {
   );
 
   useEffect(() => {
-    refreshProjects();
-  }, []);
+    if (auth.user) refreshProjects();
+  }, [auth.user]);
 
   useEffect(() => {
-    if (!activeProject || activeProject.status === 'completed') return undefined;
+    if (!activeProject || ['completed', 'failed'].includes(activeProject.status)) return undefined;
 
     const timer = setInterval(async () => {
       try {
@@ -89,6 +89,8 @@ function App() {
   function logout() {
     setAuthToken(null);
     localStorage.removeItem('auth_user');
+    setProjects([]);
+    setActiveProject(null);
     setAuth({ token: null, user: null });
   }
 
@@ -194,7 +196,21 @@ function App() {
                 <div style={{ width: `${activeProject.progress || 0}%` }} />
               </div>
               <p className="status">{activeProject.status} - {activeProject.progress || 0}%</p>
-              {activeProject.outputUrl && <a className="download" href={activeProject.outputUrl}>Open Export</a>}
+              {activeProject.error && <p className="error">{activeProject.error}</p>}
+              {activeProject.outputUrl && (
+                <div className="exportPreview">
+                  <video src={resolveAssetUrl(activeProject.outputUrl)} controls playsInline />
+                  <a className="download" href={resolveAssetUrl(activeProject.outputUrl)} target="_blank" rel="noreferrer">Open Export</a>
+                </div>
+              )}
+              {activeProject.scriptResult?.scenes?.length > 0 && (
+                <div className="sceneSummary">
+                  <strong>Generated Scenes</strong>
+                  {activeProject.scriptResult.scenes.map(scene => (
+                    <span key={scene.order}>{scene.order}. {scene.subtitle}</span>
+                  ))}
+                </div>
+              )}
             </>
           ) : (
             <p>No active project yet. Form submit karo.</p>

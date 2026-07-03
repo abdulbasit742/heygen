@@ -1,7 +1,13 @@
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
+import { loadMap, saveMap } from './jsonFileStore.js';
 
-const users = new Map();
+const STORE_FILE = 'users.json';
+const users = loadMap(STORE_FILE);
+
+function persistUsers() {
+  saveMap(STORE_FILE, users);
+}
 
 function sanitizeUser(user) {
   if (!user) return null;
@@ -37,6 +43,7 @@ export async function createUser({ name, email, password }) {
   };
 
   users.set(user.id, user);
+  persistUsers();
   return sanitizeUser(user);
 }
 

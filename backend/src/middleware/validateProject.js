@@ -1,5 +1,11 @@
 export function validateCreateProject(req, res, next) {
-  const { prompt, platform = 'instagram_reels', language = 'en' } = req.body || {};
+  const {
+    title = 'Untitled AI Video',
+    prompt,
+    platform = 'instagram_reels',
+    language = 'English',
+    tone = 'cinematic'
+  } = req.body || {};
 
   if (!prompt || typeof prompt !== 'string' || prompt.trim().length < 10) {
     return res.status(400).json({
@@ -15,11 +21,14 @@ export function validateCreateProject(req, res, next) {
   }
 
   req.projectInput = {
+    title: String(title || 'Untitled AI Video').trim(),
     prompt: prompt.trim(),
     platform,
     language,
-    avatarId: req.body.avatarId || 'default_avatar',
-    voiceId: req.body.voiceId || 'default_voice'
+    tone,
+    avatarId: req.body.avatarId || req.body.avatar || 'default_avatar',
+    voiceId: req.body.voiceId || req.body.voice || 'default_voice',
+    mediaAssetId: req.body.mediaAssetId || null
   };
 
   next();

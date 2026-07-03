@@ -193,6 +193,30 @@
   color: #94a3b8;
 }
 
+.exportPreview {
+  display: grid;
+  gap: 12px;
+}
+
+.exportPreview video {
+  width: 100%;
+  max-height: 420px;
+  border-radius: 18px;
+  background: #050509;
+  border: 1px solid #30303d;
+}
+
+.sceneSummary {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.sceneSummary span {
+  color: #c7c7d4;
+  font-size: 14px;
+}
+
 .brandForm,
 .captionStudio,
 .jobMonitor {

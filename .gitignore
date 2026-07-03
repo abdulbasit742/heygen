@@ -3,6 +3,8 @@ dist/
 .tools/
 storage/
 backend/storage/
+backend/data/
+data/
 *.log
 .env
 backend/.env

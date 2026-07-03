@@ -1,4 +1,11 @@
-const brandKits = new Map();
+import { loadMap, saveMap } from './jsonFileStore.js';
+
+const STORE_FILE = 'brand-kits.json';
+const brandKits = loadMap(STORE_FILE, 'ownerId');
+
+function persistBrandKits() {
+  saveMap(STORE_FILE, brandKits);
+}
 
 const DEFAULT_BRAND_KIT = {
   id: 'default_creator_brand',
@@ -25,6 +32,7 @@ const DEFAULT_BRAND_KIT = {
 export function getBrandKit(ownerId) {
   if (!brandKits.has(ownerId)) {
     brandKits.set(ownerId, { ...DEFAULT_BRAND_KIT, ownerId });
+    persistBrandKits();
   }
   return brandKits.get(ownerId);
 }
@@ -51,6 +59,7 @@ export function updateBrandKit(ownerId, input = {}) {
   };
 
   brandKits.set(ownerId, updated);
+  persistBrandKits();
   return updated;
 }
 

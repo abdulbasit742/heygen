@@ -19,6 +19,10 @@ HeyGen-style MVP for prompt-to-video workflows. The app includes a React dashboa
 
 ## Quick Start
 
+Requirements:
+
+- Node.js 20.19+ or 22.12+
+
 ```bash
 npm run install:all
 copy backend\.env.example backend\.env
@@ -48,12 +52,18 @@ npm start
 - `POST /api/captions/optimize`
 - `GET /api/jobs`
 
+## Local Persistence
+
+The backend stores MVP data in JSON files under `backend/data` by default. This keeps users, projects, subscriptions, brand kits, media metadata, jobs, settings, workspaces, and scheduled posts available after a restart while keeping setup simple.
+
+Rendered videos and subtitles are written to `backend/storage` and served from `/media`.
+
 ## Production Connections To Add
 
 - Real LLM provider for scripts
 - Real TTS provider such as ElevenLabs, Azure TTS, or XTTS
 - Real avatar/lip-sync/video provider
-- Real database persistence instead of in-memory stores
+- Production database persistence such as PostgreSQL or Supabase
 - Stripe, Paddle, Razorpay, or local payment provider webhooks
 - Redis/BullMQ render workers for long-running jobs
 

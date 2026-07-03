@@ -1,6 +1,12 @@
 import crypto from 'crypto';
+import { loadMap, saveMap } from './jsonFileStore.js';
 
-const projects = new Map();
+const STORE_FILE = 'projects.json';
+const projects = loadMap(STORE_FILE);
+
+function persistProjects() {
+  saveMap(STORE_FILE, projects);
+}
 
 export function createProject(input) {
   const id = crypto.randomUUID();
@@ -15,6 +21,7 @@ export function createProject(input) {
     updatedAt: now
   };
   projects.set(id, project);
+  persistProjects();
   return project;
 }
 
@@ -31,5 +38,6 @@ export function updateProject(id, patch) {
   if (!current) return null;
   const updated = { ...current, ...patch, updatedAt: new Date().toISOString() };
   projects.set(id, updated);
+  persistProjects();
   return updated;
 }

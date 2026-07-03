@@ -1,6 +1,12 @@
 import crypto from 'crypto';
+import { loadMap, saveMap } from './jsonFileStore.js';
 
-const jobs = new Map();
+const STORE_FILE = 'jobs.json';
+const jobs = loadMap(STORE_FILE);
+
+function persistJobs() {
+  saveMap(STORE_FILE, jobs);
+}
 
 const VALID_STATUSES = ['queued', 'processing', 'completed', 'failed', 'cancelled'];
 
@@ -33,6 +39,7 @@ export function createJob(ownerId, input = {}) {
   };
 
   jobs.set(id, job);
+  persistJobs();
   return job;
 }
 
@@ -67,6 +74,7 @@ export function updateJob(id, patch = {}) {
   };
 
   jobs.set(id, updated);
+  persistJobs();
   return updated;
 }
 
