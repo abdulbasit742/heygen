@@ -11,6 +11,7 @@ HeyGen-style MVP for prompt-to-video workflows. The app includes a React dashboa
 - Project creation with generated script, scenes, render job tracking, and MP4 export
 - Project retry and render job linkage
 - Voice preset API with generated mock TTS WAV audio and manifest per project
+- Final MP4 export muxes generated voiceover into an AAC audio track
 - Auto captions, hashtags, and export metadata saved per project
 - Production pack saved per project with avatar job, voiceover manifest, scene assets, and export checklist
 - Export package manifest download and one-click scheduling from completed projects

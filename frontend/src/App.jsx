@@ -363,6 +363,7 @@ function App() {
                   <span>{activeProject.exportMetadata.durationSeconds}s</span>
                   <span>{activeProject.exportMetadata.sceneCount} scenes</span>
                   {activeProject.exportMetadata.voiceoverProvider && <span>Voice: {activeProject.exportMetadata.voiceoverProvider}</span>}
+                  {activeProject.exportMetadata.audioMuxed && <span>Audio track: {activeProject.exportMetadata.audioCodec || 'aac'}</span>}
                   {activeProject.exportMetadata.brandKit?.name && <span>Brand: {activeProject.exportMetadata.brandKit.name}</span>}
                   {activeProject.exportMetadata.brandKit?.watermark?.enabled && <span>Watermark on</span>}
                   {(activeProject.scheduledPostIds?.length || 0) > 0 && <span>{activeProject.scheduledPostIds.length} scheduled</span>}

@@ -106,7 +106,33 @@ function brandSnapshot(brandKit = {}) {
   };
 }
 
-export async function renderVideo({ script, title, brandKit }) {
+function audioPathFromVoiceover(storageDir, voiceover = {}) {
+  if (!voiceover.audioUrl || !voiceover.audioUrl.startsWith('/media/')) return null;
+  const fileName = path.basename(voiceover.audioUrl);
+  const filePath = path.join(storageDir, fileName);
+  return fs.existsSync(filePath) ? filePath : null;
+}
+
+function renderDurationSeconds(voiceover = {}) {
+  const duration = Number(voiceover.durationSeconds);
+  if (!Number.isFinite(duration)) return 12;
+  return Math.max(6, Math.min(60, Math.ceil(duration)));
+}
+
+function buildRenderArgs({ backgroundColor, duration, srtPath, brandKit, outPath, audioPath, includeWatermark }) {
+  return [
+    '-y',
+    '-f', 'lavfi', '-i', `color=c=${backgroundColor}:s=1080x1920:d=${duration}`,
+    ...(audioPath ? ['-i', audioPath] : []),
+    '-vf', buildVideoFilter(srtPath, brandKit, includeWatermark),
+    '-c:v', 'libx264',
+    '-pix_fmt', 'yuv420p',
+    ...(audioPath ? ['-c:a', 'aac', '-b:a', '128k', '-shortest'] : []),
+    outPath
+  ];
+}
+
+export async function renderVideo({ script, title, brandKit, voiceover }) {
   const storageDir = process.env.STORAGE_DIR || './storage';
   fs.mkdirSync(storageDir, { recursive: true });
   const id = randomUUID();
@@ -114,25 +140,47 @@ export async function renderVideo({ script, title, brandKit }) {
   const outPath = path.join(storageDir, `${id}.mp4`);
   fs.writeFileSync(srtPath, createSrt(script));
   const backgroundColor = ffmpegColor(brandKit?.primaryColor);
-  let renderWarning = null;
+  const audioPath = audioPathFromVoiceover(storageDir, voiceover);
+  const duration = renderDurationSeconds(voiceover);
+  const renderWarnings = [];
 
   // MVP render: creates a 9:16 video with subtitles. Replace the lavfi input
   // with avatar footage or generated scene clips for production-grade output.
   try {
-    await exec(ffmpegPath || 'ffmpeg', [
-      '-y',
-      '-f', 'lavfi', '-i', `color=c=${backgroundColor}:s=1080x1920:d=12`,
-      '-vf', buildVideoFilter(srtPath, brandKit, true),
-      '-c:v', 'libx264', '-pix_fmt', 'yuv420p', outPath
-    ]);
+    await exec(ffmpegPath || 'ffmpeg', buildRenderArgs({
+      backgroundColor,
+      duration,
+      srtPath,
+      brandKit,
+      outPath,
+      audioPath,
+      includeWatermark: true
+    }));
   } catch (error) {
-    renderWarning = `Watermark filter fallback used: ${error.message}`;
-    await exec(ffmpegPath || 'ffmpeg', [
-      '-y',
-      '-f', 'lavfi', '-i', `color=c=${backgroundColor}:s=1080x1920:d=12`,
-      '-vf', buildVideoFilter(srtPath, brandKit, false),
-      '-c:v', 'libx264', '-pix_fmt', 'yuv420p', outPath
-    ]);
+    renderWarnings.push(`Watermark filter fallback used: ${error.message}`);
+    try {
+      await exec(ffmpegPath || 'ffmpeg', buildRenderArgs({
+        backgroundColor,
+        duration,
+        srtPath,
+        brandKit,
+        outPath,
+        audioPath,
+        includeWatermark: false
+      }));
+    } catch (audioError) {
+      if (!audioPath) throw audioError;
+      renderWarnings.push(`Audio mux fallback used: ${audioError.message}`);
+      await exec(ffmpegPath || 'ffmpeg', buildRenderArgs({
+        backgroundColor,
+        duration,
+        srtPath,
+        brandKit,
+        outPath,
+        audioPath: null,
+        includeWatermark: false
+      }));
+    }
   }
 
   return {
@@ -140,7 +188,13 @@ export async function renderVideo({ script, title, brandKit }) {
     title,
     url: `/media/${id}.mp4`,
     subtitles: `/media/${id}.srt`,
+    audio: voiceover ? {
+      url: voiceover.audioUrl || null,
+      muxed: Boolean(audioPath && !renderWarnings.some(warning => warning.startsWith('Audio mux fallback'))),
+      codec: audioPath ? 'aac' : null
+    } : null,
+    durationSeconds: duration,
     brand: brandSnapshot(brandKit),
-    renderWarning
+    renderWarning: renderWarnings.length ? renderWarnings.join(' | ') : null
   };
 }

@@ -181,7 +181,8 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
     const exportResult = await renderVideo({
       script: scriptResult.script,
       title: input.title || scriptResult.title,
-      brandKit
+      brandKit,
+      voiceover
     });
 
     const exportMetadata = {
@@ -194,11 +195,13 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
       platform: input.platform,
       templateId: input.templateId || null,
       sceneCount: scriptResult.scenes.length,
-      durationSeconds: scriptResult.totalDurationSeconds,
+      durationSeconds: exportResult.durationSeconds || scriptResult.totalDurationSeconds,
       brandKit: exportResult.brand || exportBrandSnapshot(brandKit),
       voiceoverUrl: voiceover.audioUrl,
       voiceoverManifestUrl: voiceover.manifestUrl,
       voiceoverProvider: voiceover.provider,
+      audioMuxed: Boolean(exportResult.audio?.muxed),
+      audioCodec: exportResult.audio?.codec || null,
       renderWarning: exportResult.renderWarning || null,
       generatedAt: new Date().toISOString()
     };
