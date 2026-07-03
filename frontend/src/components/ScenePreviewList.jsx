@@ -1,4 +1,4 @@
-export default function ScenePreviewList({ scenes = [], assets = [] }) {
+export default function ScenePreviewList({ scenes = [], assets = [], resolveUrl }) {
   return (
     <section className="card">
       <h2>Scene Visuals</h2>
@@ -9,7 +9,21 @@ export default function ScenePreviewList({ scenes = [], assets = [] }) {
             <article className="sceneItem" key={scene.order || index}>
               <strong>Scene {scene.order || index + 1}</strong>
               <p>{scene.subtitle || scene.narration}</p>
-              {asset && <small>{asset.status} · {asset.prompt}</small>}
+              {asset && (
+                <>
+                  <small>{asset.status} - {asset.prompt}</small>
+                  {asset.assetUrl && (
+                    <a
+                      className="smallDownload"
+                      href={resolveUrl ? resolveUrl(asset.assetUrl) : asset.assetUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open Asset Manifest
+                    </a>
+                  )}
+                </>
+              )}
             </article>
           );
         })}

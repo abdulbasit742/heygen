@@ -29,8 +29,8 @@ export function validateCreateProject(req, res, next) {
     templateId: req.body.templateId || null,
     niche: req.body.niche || '',
     sceneCount: Number(req.body.sceneCount || 0) || undefined,
-    avatarId: req.body.avatarId || req.body.avatar || 'default_avatar',
-    voiceId: req.body.voiceId || req.body.voice || 'default_voice',
+    avatarId: req.body.avatarId || req.body.avatar || 'studio_presenter',
+    voiceId: req.body.voiceId || req.body.voice || 'calm_male',
     mediaAssetId: req.body.mediaAssetId || null
   };
 

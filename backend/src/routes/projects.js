@@ -8,6 +8,7 @@ import { renderVideo } from '../services/renderService.js';
 import { createJob, updateJob } from '../services/jobQueueService.js';
 import { applyTemplate } from '../services/templateService.js';
 import { optimizeCaption } from '../services/captionOptimizerService.js';
+import { buildProductionPack, finalizeProductionPack } from '../services/productionPackService.js';
 
 const router = Router();
 
@@ -28,6 +29,9 @@ function exportPayload(project) {
     metadata: project.exportMetadata || null,
     exportMetadata: project.exportMetadata || null,
     captionResult: project.captionResult || null,
+    productionPack: project.productionPack || null,
+    avatarJob: project.avatarJob || null,
+    visualAssets: project.visualAssets || [],
     scenes: project.scenes || [],
     completedAt: project.completedAt || null
   };
@@ -68,6 +72,7 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
       tone: input.tone,
       hook: scriptResult.hook
     });
+    const productionPack = buildProductionPack({ input, scriptResult });
 
     updateProject(projectId, {
       status: 'rendering',
@@ -75,12 +80,15 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
       script: scriptResult.script,
       scriptResult,
       captionResult,
+      productionPack,
+      avatarJob: productionPack.avatarJob,
+      visualAssets: productionPack.visualAssets,
       scenes: scriptResult.scenes
     });
     updateJob(jobId, {
       status: 'rendering',
       progress: 55,
-      payload: { ...input, script: scriptResult.script, scenes: scriptResult.scenes, captionResult }
+      payload: { ...input, script: scriptResult.script, scenes: scriptResult.scenes, captionResult, productionPack }
     });
 
     const exportResult = await renderVideo({
@@ -101,6 +109,7 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
       durationSeconds: scriptResult.totalDurationSeconds,
       generatedAt: new Date().toISOString()
     };
+    const finalProductionPack = finalizeProductionPack(productionPack, exportResult, exportMetadata);
 
     incrementExportUsage(userId);
     updateProject(projectId, {
@@ -110,6 +119,9 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
       subtitlesUrl: exportResult.subtitles,
       exportId: exportResult.id,
       exportMetadata,
+      productionPack: finalProductionPack,
+      avatarJob: finalProductionPack.avatarJob,
+      visualAssets: finalProductionPack.visualAssets,
       completedAt: new Date().toISOString()
     });
     updateJob(jobId, {
@@ -120,6 +132,7 @@ async function runProjectPipeline(projectId, input, userId, jobId) {
         exportUrl: exportResult.url,
         subtitlesUrl: exportResult.subtitles,
         captionResult,
+        productionPack: finalProductionPack,
         ...exportMetadata
       }
     });
@@ -196,7 +209,10 @@ router.post('/:id/retry', (req, res) => {
     subtitlesUrl: null,
     exportId: null,
     exportMetadata: null,
-    captionResult: null
+    captionResult: null,
+    productionPack: null,
+    avatarJob: null,
+    visualAssets: []
   });
   const job = startProjectJob(req.user.id, resetProject, retryInput);
   return res.json({ project: { ...resetProject, jobId: job.id }, job });

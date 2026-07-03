@@ -11,6 +11,7 @@ import AnalyticsDashboard from './components/AnalyticsDashboard.jsx';
 import JobMonitor from './components/JobMonitor.jsx';
 import SchedulerPanel from './components/SchedulerPanel.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
+import ScenePreviewList from './components/ScenePreviewList.jsx';
 import { createProject, deleteProject, getProject, listProjects, listTemplates, loadStoredAuth, resolveAssetUrl, retryProject, setAuthToken } from './api.js';
 import './style.css';
 
@@ -297,6 +298,22 @@ function App() {
                   <span>{activeProject.exportMetadata.sceneCount} scenes</span>
                 </div>
               )}
+              {activeProject.productionPack && (
+                <div className="productionPack">
+                  <strong>Production Pack</strong>
+                  <div className="packGrid">
+                    <span>Avatar: {activeProject.productionPack.avatarJob?.avatar?.name || activeProject.avatarId}</span>
+                    <span>Voice: {activeProject.productionPack.voiceover?.voiceId || activeProject.voiceId}</span>
+                    <span>Assets: {activeProject.productionPack.visualAssets?.length || 0}</span>
+                    <span>Status: {activeProject.productionPack.status}</span>
+                  </div>
+                  <div className="checklist">
+                    {activeProject.productionPack.checklist?.map(item => (
+                      <span className={item.done ? 'done' : ''} key={item.id}>{item.done ? 'Ready' : 'Pending'}: {item.label}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
               {activeProject.scriptResult?.scenes?.length > 0 && (
                 <div className="sceneSummary">
                   <strong>Generated Scenes</strong>
@@ -311,6 +328,14 @@ function App() {
           )}
         </section>
       </section>
+
+      {activeProject && (
+        <ScenePreviewList
+          scenes={activeProject.scriptResult?.scenes || activeProject.scenes || []}
+          assets={activeProject.visualAssets || activeProject.productionPack?.visualAssets || []}
+          resolveUrl={resolveAssetUrl}
+        />
+      )}
 
       <MediaLibrary onSelect={item => updateField('mediaAssetId', item.id)} />
 

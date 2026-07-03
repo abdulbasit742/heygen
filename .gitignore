@@ -3,6 +3,8 @@ dist/
 .tools/
 storage/
 backend/storage/
+generated-assets/
+backend/generated-assets/
 backend/data/
 data/
 *.log

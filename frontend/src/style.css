@@ -218,7 +218,8 @@
 }
 
 .captionSummary,
-.exportMeta {
+.exportMeta,
+.productionPack {
   border: 1px solid #26324a;
   background: #111827;
   border-radius: 14px;
@@ -243,6 +244,56 @@
   color: #bfdbfe;
   padding: 6px 10px;
   font-size: 13px;
+}
+
+.productionPack {
+  display: grid;
+  gap: 12px;
+}
+
+.packGrid,
+.checklist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.packGrid span,
+.checklist span {
+  border-radius: 999px;
+  background: #0f172a;
+  color: #bfdbfe;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.checklist span.done {
+  color: #bbf7d0;
+  background: #052e1a;
+}
+
+.sceneList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.sceneItem {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #26324a;
+  background: #111827;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.sceneItem p {
+  margin: 0;
+  color: #dbeafe;
+}
+
+.sceneItem small {
+  color: #94a3b8;
 }
 
 .projectRow {
