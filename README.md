@@ -17,6 +17,7 @@ HeyGen-style MVP for prompt-to-video workflows. The app includes a React dashboa
 - Scene generator creates provider-safe SVG storyboard thumbnails plus asset manifests
 - Export package manifest download and one-click scheduling from completed projects
 - Revocable public share pages for completed exports
+- Share analytics with active links, statuses, and public view counts
 - Brand-aware renders with saved colors, subtitle styling, and watermark metadata
 - Brand kit editor for logo, colors, fonts, subtitle styling, and watermark settings
 - Media library metadata manager

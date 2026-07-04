@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAnalyticsSummary } from '../api.js';
+import { getAnalyticsSummary, resolveAssetUrl } from '../api.js';
 
 export default function AnalyticsDashboard() {
   const [analytics, setAnalytics] = useState(null);
@@ -19,6 +19,8 @@ export default function AnalyticsDashboard() {
     ['Completed', analytics.totals.completed],
     ['Processing', analytics.totals.processing],
     ['Exports', analytics.totals.exports],
+    ['Shares', analytics.totals.shares || 0],
+    ['Share Views', analytics.totals.shareViews || 0],
     ['Video Minutes', analytics.totals.estimatedMinutes]
   ];
 
@@ -41,6 +43,14 @@ export default function AnalyticsDashboard() {
         ))}
       </div>
 
+      <h3>Share Status</h3>
+      <div className="tagList">
+        {Object.entries(analytics.byShareStatus || {}).map(([status, count]) => (
+          <span className="pill" key={status}>{status}: {count}</span>
+        ))}
+        {!Object.keys(analytics.byShareStatus || {}).length && <span className="muted">No shared exports yet.</span>}
+      </div>
+
       <h3>Latest Projects</h3>
       <div className="projectList">
         {analytics.latestProjects.map(project => (
@@ -49,6 +59,21 @@ export default function AnalyticsDashboard() {
             <span>{project.status} - {project.platform} - {project.progress}%</span>
           </div>
         ))}
+      </div>
+
+      <h3>Latest Shared Exports</h3>
+      <div className="shareAnalyticsList">
+        {(analytics.latestShares || []).map(share => (
+          <article className="shareAnalyticsItem" key={share.id}>
+            <div>
+              <strong>{share.title}</strong>
+              <span>{share.status} - {share.platform} - {share.viewCount} views</span>
+              <small>Expires: {share.expiresAt ? new Date(share.expiresAt).toLocaleString() : 'Never'}</small>
+            </div>
+            <a className="download smallDownload" href={resolveAssetUrl(share.shareUrl)} target="_blank" rel="noreferrer">Open</a>
+          </article>
+        ))}
+        {!(analytics.latestShares || []).length && <p className="muted">Share link create karne ke baad analytics yahan dikhegi.</p>}
       </div>
     </section>
   );

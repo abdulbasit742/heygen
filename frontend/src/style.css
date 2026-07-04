@@ -411,6 +411,32 @@
   color: #94a3b8;
 }
 
+.shareAnalyticsList {
+  display: grid;
+  gap: 12px;
+}
+
+.shareAnalyticsItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #26324a;
+  background: #111827;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.shareAnalyticsItem div {
+  display: grid;
+  gap: 4px;
+}
+
+.shareAnalyticsItem span,
+.shareAnalyticsItem small {
+  color: #94a3b8;
+}
+
 .tagList,
 .tagWrap {
   display: flex;
@@ -493,7 +519,8 @@
 
 @media(max-width:640px){
   .sectionHeader,
-  .jobCard div:first-child {
+  .jobCard div:first-child,
+  .shareAnalyticsItem {
     display: grid;
   }
 }
