@@ -7,6 +7,7 @@ import MediaLibrary from './components/MediaLibrary.jsx';
 import BrandKitPanel from './components/BrandKitPanel.jsx';
 import CaptionStudio from './components/CaptionStudio.jsx';
 import TeamPanel from './components/TeamPanel.jsx';
+import ClientFoldersPanel from './components/ClientFoldersPanel.jsx';
 import AnalyticsDashboard from './components/AnalyticsDashboard.jsx';
 import JobMonitor from './components/JobMonitor.jsx';
 import SchedulerPanel from './components/SchedulerPanel.jsx';
@@ -474,6 +475,8 @@ function App() {
       <CaptionStudio />
 
       <TeamPanel />
+
+      <ClientFoldersPanel />
 
       <AnalyticsDashboard />
 

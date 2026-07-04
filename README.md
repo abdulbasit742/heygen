@@ -23,6 +23,7 @@ HeyGen-style MVP for prompt-to-video workflows. The app includes a React dashboa
 - Brand kit editor for logo, colors, fonts, subtitle styling, and watermark settings
 - Media library metadata manager
 - Caption optimizer with hooks, CTAs, and hashtags
+- Client folders for organizing projects, exports, and campaign work
 - Analytics dashboard for project and export counts
 - Team workspace and invite flow
 - Scheduler with mock publish flow
@@ -65,6 +66,9 @@ npm start
 - `DELETE /api/projects/:id/share`
 - `GET /api/share/:token`
 - `GET /share/:token`
+- `GET /api/client-folders`
+- `POST /api/client-folders`
+- `POST /api/client-folders/:folderId/projects`
 - `DELETE /api/projects/:id`
 - `GET /api/templates`
 - `GET /api/voiceover/voices`

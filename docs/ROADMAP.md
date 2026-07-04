@@ -15,3 +15,4 @@
 14. Revocable public share pages for completed exports
 15. Share analytics for public views, active links, and share status
 16. Full ZIP export bundles with MP4, subtitles, voiceover, scene assets, captions, and manifest
+17. Client folders for organizing project exports by client, campaign, status, and platform

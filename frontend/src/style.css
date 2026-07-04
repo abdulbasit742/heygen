@@ -437,6 +437,106 @@
   color: #94a3b8;
 }
 
+.clientFoldersPanel {
+  display: grid;
+  gap: 14px;
+}
+
+.folderSummary,
+.folderMetrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.folderSummary span,
+.folderMetrics span {
+  border-radius: 999px;
+  background: #0f172a;
+  color: #bfdbfe;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.folderForm {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.folderForm button,
+.assignForm button {
+  align-self: end;
+}
+
+.folderNotesField {
+  grid-column: span 2;
+}
+
+.assignForm {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.5fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.folderGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.clientFolderCard {
+  border: 1px solid #26324a;
+  background: #111827;
+  border-radius: 14px;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.folderCardHeader {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 120px;
+  gap: 10px;
+  align-items: center;
+}
+
+.folderCardHeader div,
+.folderProjectRow div {
+  display: grid;
+  gap: 3px;
+}
+
+.folderCardHeader small,
+.folderProjectRow small {
+  color: #94a3b8;
+}
+
+.folderColor {
+  width: 18px;
+  height: 42px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.folderProjects {
+  display: grid;
+  gap: 8px;
+}
+
+.folderProjectRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #26324a;
+  border-radius: 12px;
+  padding: 10px;
+  background: #0f172a;
+}
+
 .tagList,
 .tagWrap {
   display: flex;
@@ -520,7 +620,15 @@
 @media(max-width:640px){
   .sectionHeader,
   .jobCard div:first-child,
-  .shareAnalyticsItem {
+  .shareAnalyticsItem,
+  .assignForm,
+  .folderCardHeader,
+  .folderProjectRow {
     display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .folderNotesField {
+    grid-column: auto;
   }
 }

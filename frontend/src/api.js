@@ -222,6 +222,36 @@ export async function removeMember(workspaceId, email) {
   return data.workspace;
 }
 
+export async function listClientFolders() {
+  const { data } = await api.get('/client-folders');
+  return data;
+}
+
+export async function createClientFolder(payload) {
+  const { data } = await api.post('/client-folders', payload);
+  return data;
+}
+
+export async function updateClientFolder(folderId, payload) {
+  const { data } = await api.put(`/client-folders/${folderId}`, payload);
+  return data;
+}
+
+export async function deleteClientFolder(folderId) {
+  const { data } = await api.delete(`/client-folders/${folderId}`);
+  return data;
+}
+
+export async function addProjectToClientFolder(folderId, projectId) {
+  const { data } = await api.post(`/client-folders/${folderId}/projects`, { projectId });
+  return data;
+}
+
+export async function removeProjectFromClientFolder(folderId, projectId) {
+  const { data } = await api.delete(`/client-folders/${folderId}/projects/${projectId}`);
+  return data;
+}
+
 
 export async function listScheduledPosts(params = {}) {
   const { data } = await api.get('/scheduler', { params });
