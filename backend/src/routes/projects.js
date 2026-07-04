@@ -13,6 +13,7 @@ import { createScheduledPost } from '../services/schedulerService.js';
 import { getBrandKit } from '../services/brandKitService.js';
 import { generateVoiceover } from '../services/voiceoverService.js';
 import { createProjectShare, revokeProjectShare, shareSummary } from '../services/shareService.js';
+import { createProjectBundle } from '../services/exportBundleService.js';
 
 const router = Router();
 
@@ -280,6 +281,24 @@ router.get('/:id/package', (req, res) => {
   const project = getProject(req.params.id);
   if (!ensureOwner(project, req.user.id)) return res.status(404).json({ error: 'Project not found.' });
   return res.json({ package: buildExportPackage(project) });
+});
+
+router.get('/:id/bundle', (req, res, next) => {
+  try {
+    const project = getProject(req.params.id);
+    if (!ensureOwner(project, req.user.id)) return res.status(404).json({ error: 'Project not found.' });
+    if (project.status !== 'completed' || !project.outputUrl) {
+      return res.status(409).json({ error: 'Project must be completed before downloading a bundle.' });
+    }
+
+    const bundle = createProjectBundle(project, buildExportPackage(project));
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${bundle.fileName}"`);
+    res.setHeader('X-Bundle-File-Count', String(bundle.fileCount));
+    return res.send(bundle.buffer);
+  } catch (error) {
+    return next(error);
+  }
 });
 
 router.get('/:id', (req, res) => {

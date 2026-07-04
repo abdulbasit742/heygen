@@ -80,6 +80,20 @@ export async function getProjectPackage(id) {
   return data.package;
 }
 
+function fileNameFromDisposition(disposition, fallback) {
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition || '');
+  return match ? decodeURIComponent(match[1]) : fallback;
+}
+
+export async function downloadProjectBundle(id, fallbackName = 'project_export_bundle.zip') {
+  const { data, headers } = await api.get(`/projects/${id}/bundle`, { responseType: 'blob' });
+  return {
+    blob: data,
+    fileName: fileNameFromDisposition(headers['content-disposition'], fallbackName),
+    fileCount: Number(headers['x-bundle-file-count'] || 0)
+  };
+}
+
 export async function scheduleProject(id, payload = {}) {
   const { data } = await api.post(`/projects/${id}/schedule`, payload);
   return data;

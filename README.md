@@ -16,6 +16,7 @@ HeyGen-style MVP for prompt-to-video workflows. The app includes a React dashboa
 - Production pack saved per project with avatar job, voiceover manifest, scene assets, and export checklist
 - Scene generator creates provider-safe SVG storyboard thumbnails plus asset manifests
 - Export package manifest download and one-click scheduling from completed projects
+- Full ZIP export bundle with MP4, subtitles, voiceover files, storyboard assets, script, captions, and manifest
 - Revocable public share pages for completed exports
 - Share analytics with active links, statuses, and public view counts
 - Brand-aware renders with saved colors, subtitle styling, and watermark metadata
@@ -58,6 +59,7 @@ npm start
 - `POST /api/projects/:id/retry`
 - `GET /api/projects/:id/export`
 - `GET /api/projects/:id/package`
+- `GET /api/projects/:id/bundle`
 - `POST /api/projects/:id/schedule`
 - `POST /api/projects/:id/share`
 - `DELETE /api/projects/:id/share`

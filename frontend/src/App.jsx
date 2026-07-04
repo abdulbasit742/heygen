@@ -12,7 +12,7 @@ import JobMonitor from './components/JobMonitor.jsx';
 import SchedulerPanel from './components/SchedulerPanel.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
 import ScenePreviewList from './components/ScenePreviewList.jsx';
-import { createProject, createProjectShare, deleteProject, getProject, getProjectPackage, listProjects, listTemplates, listVoices, loadStoredAuth, resolveAssetUrl, retryProject, revokeProjectShare, scheduleProject, setAuthToken } from './api.js';
+import { createProject, createProjectShare, deleteProject, downloadProjectBundle, getProject, getProjectPackage, listProjects, listTemplates, listVoices, loadStoredAuth, resolveAssetUrl, retryProject, revokeProjectShare, scheduleProject, setAuthToken } from './api.js';
 import './style.css';
 
 const DEFAULT_PROMPT = 'Create a 30 second motivational avatar video about discipline and success.';
@@ -162,6 +162,24 @@ function App() {
     anchor.click();
     URL.revokeObjectURL(url);
     setProjectMessage('Export package manifest ready.');
+  }
+
+  async function downloadBundle() {
+    if (!activeProject) return;
+    setProjectMessage('');
+    try {
+      const fallbackName = `${activeProject.title.replace(/[^a-z0-9]+/gi, '_')}_export_bundle.zip`;
+      const bundle = await downloadProjectBundle(activeProject.id, fallbackName);
+      const url = URL.createObjectURL(bundle.blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = bundle.fileName;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      setProjectMessage(`ZIP export bundle ready${bundle.fileCount ? ` with ${bundle.fileCount} files` : ''}.`);
+    } catch (err) {
+      setProjectMessage(err.response?.data?.error || 'Bundle download nahi ho saka.');
+    }
   }
 
   async function scheduleActiveProject() {
@@ -355,6 +373,7 @@ function App() {
                   <div className="inlineActions">
                     <a className="download" href={resolveAssetUrl(activeProject.outputUrl)} target="_blank" rel="noreferrer">Open Export</a>
                     <button type="button" onClick={downloadProjectPackage}>Download Package</button>
+                    <button type="button" onClick={downloadBundle}>Download Bundle</button>
                     <button type="button" onClick={scheduleActiveProject}>Schedule Export</button>
                     <button type="button" onClick={shareActiveProject}>Create Share Link</button>
                   </div>

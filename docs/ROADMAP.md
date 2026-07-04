@@ -14,3 +14,4 @@
 13. SVG storyboard thumbnails for generated scene assets
 14. Revocable public share pages for completed exports
 15. Share analytics for public views, active links, and share status
+16. Full ZIP export bundles with MP4, subtitles, voiceover, scene assets, captions, and manifest
