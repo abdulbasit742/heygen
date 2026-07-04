@@ -20,6 +20,7 @@ import schedulerRoutes from './routes/scheduler.js';
 import settingsRoutes from './routes/settings.js';
 import jobsRoutes from './routes/jobs.js';
 import voiceoverRoutes from './routes/voiceover.js';
+import { shareApiRoutes, sharePageRoutes } from './routes/share.js';
 
 dotenv.config();
 
@@ -46,10 +47,12 @@ app.use('/api/scheduler', schedulerRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/voiceover', voiceoverRoutes);
+app.use('/api/share', shareApiRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/scripts', scriptRoutes);
 app.use('/api/ai-script', aiScriptRoutes);
 app.use('/api/render', renderRoutes);
+app.use('/share', sharePageRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: `Route not found: ${req.method} ${req.path}` });

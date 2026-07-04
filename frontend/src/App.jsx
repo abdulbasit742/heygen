@@ -12,7 +12,7 @@ import JobMonitor from './components/JobMonitor.jsx';
 import SchedulerPanel from './components/SchedulerPanel.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
 import ScenePreviewList from './components/ScenePreviewList.jsx';
-import { createProject, deleteProject, getProject, getProjectPackage, listProjects, listTemplates, listVoices, loadStoredAuth, resolveAssetUrl, retryProject, scheduleProject, setAuthToken } from './api.js';
+import { createProject, createProjectShare, deleteProject, getProject, getProjectPackage, listProjects, listTemplates, listVoices, loadStoredAuth, resolveAssetUrl, retryProject, revokeProjectShare, scheduleProject, setAuthToken } from './api.js';
 import './style.css';
 
 const DEFAULT_PROMPT = 'Create a 30 second motivational avatar video about discipline and success.';
@@ -177,6 +177,32 @@ function App() {
     }
   }
 
+  async function shareActiveProject() {
+    if (!activeProject) return;
+    setProjectMessage('');
+    try {
+      const result = await createProjectShare(activeProject.id);
+      setActiveProject(result.project);
+      setProjects(current => current.map(project => project.id === result.project.id ? result.project : project));
+      setProjectMessage(`Share link ready: ${resolveAssetUrl(result.share.shareUrl)}`);
+    } catch (err) {
+      setProjectMessage(err.response?.data?.error || 'Share link create nahi ho saka.');
+    }
+  }
+
+  async function revokeActiveShare() {
+    if (!activeProject) return;
+    setProjectMessage('');
+    try {
+      const result = await revokeProjectShare(activeProject.id);
+      setActiveProject(result.project);
+      setProjects(current => current.map(project => project.id === result.project.id ? result.project : project));
+      setProjectMessage('Share link revoked.');
+    } catch (err) {
+      setProjectMessage(err.response?.data?.error || 'Share link revoke nahi ho saka.');
+    }
+  }
+
   function handleAuth(result) {
     setAuth({ token: result.token, user: result.user });
   }
@@ -330,10 +356,22 @@ function App() {
                     <a className="download" href={resolveAssetUrl(activeProject.outputUrl)} target="_blank" rel="noreferrer">Open Export</a>
                     <button type="button" onClick={downloadProjectPackage}>Download Package</button>
                     <button type="button" onClick={scheduleActiveProject}>Schedule Export</button>
+                    <button type="button" onClick={shareActiveProject}>Create Share Link</button>
                   </div>
                 </div>
               )}
               {projectMessage && <p className="success">{projectMessage}</p>}
+              {activeProject.share?.enabled && (
+                <div className="shareBox">
+                  <strong>Public Share</strong>
+                  <input readOnly value={resolveAssetUrl(activeProject.share.shareUrl)} onFocus={event => event.target.select()} />
+                  <div className="inlineActions">
+                    <a className="download smallDownload" href={resolveAssetUrl(activeProject.share.shareUrl)} target="_blank" rel="noreferrer">Open Share Page</a>
+                    <button type="button" onClick={revokeActiveShare}>Revoke Share</button>
+                  </div>
+                  <small>Expires: {new Date(activeProject.share.expiresAt).toLocaleString()} - Views: {activeProject.share.viewCount || 0}</small>
+                </div>
+              )}
               {activeProject.voiceover?.audioUrl && (
                 <div className="voicePreview">
                   <strong>Voiceover</strong>
@@ -366,6 +404,7 @@ function App() {
                   {activeProject.exportMetadata.audioMuxed && <span>Audio track: {activeProject.exportMetadata.audioCodec || 'aac'}</span>}
                   {activeProject.exportMetadata.brandKit?.name && <span>Brand: {activeProject.exportMetadata.brandKit.name}</span>}
                   {activeProject.exportMetadata.brandKit?.watermark?.enabled && <span>Watermark on</span>}
+                  {activeProject.share?.enabled && <span>Public share on</span>}
                   {(activeProject.scheduledPostIds?.length || 0) > 0 && <span>{activeProject.scheduledPostIds.length} scheduled</span>}
                 </div>
               )}

@@ -85,6 +85,16 @@ export async function scheduleProject(id, payload = {}) {
   return data;
 }
 
+export async function createProjectShare(id, payload = {}) {
+  const { data } = await api.post(`/projects/${id}/share`, payload);
+  return data;
+}
+
+export async function revokeProjectShare(id) {
+  const { data } = await api.delete(`/projects/${id}/share`);
+  return data;
+}
+
 export async function listTemplates() {
   const { data } = await api.get('/templates');
   return data.templates;

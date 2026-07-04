@@ -12,6 +12,7 @@ import { buildProductionPack, finalizeProductionPack } from '../services/product
 import { createScheduledPost } from '../services/schedulerService.js';
 import { getBrandKit } from '../services/brandKitService.js';
 import { generateVoiceover } from '../services/voiceoverService.js';
+import { createProjectShare, revokeProjectShare, shareSummary } from '../services/shareService.js';
 
 const router = Router();
 
@@ -38,6 +39,7 @@ function exportPayload(project) {
     avatarJob: project.avatarJob || null,
     visualAssets: project.visualAssets || [],
     scheduledPostIds: project.scheduledPostIds || [],
+    share: shareSummary(project),
     scenes: project.scenes || [],
     completedAt: project.completedAt || null
   };
@@ -93,6 +95,7 @@ function buildExportPackage(project) {
     productionPack: project.productionPack || null,
     scenes: project.scenes || [],
     visualAssets: project.visualAssets || [],
+    share: shareSummary(project),
     schedulerDefaults: {
       title: project.title,
       caption: captionForSchedule(project),
@@ -347,6 +350,27 @@ router.post('/:id/schedule', (req, res) => {
     return res.status(201).json({ post, project: updatedProject });
   } catch (error) {
     return res.status(400).json({ error: error.message || 'Schedule create failed.' });
+  }
+});
+
+router.post('/:id/share', (req, res) => {
+  try {
+    const project = getProject(req.params.id);
+    if (!ensureOwner(project, req.user.id)) return res.status(404).json({ error: 'Project not found.' });
+    const result = createProjectShare(project.id, { ttlDays: req.body.ttlDays });
+    return res.status(201).json(result);
+  } catch (error) {
+    return res.status(400).json({ error: error.message || 'Share link create failed.' });
+  }
+});
+
+router.delete('/:id/share', (req, res) => {
+  try {
+    const project = getProject(req.params.id);
+    if (!ensureOwner(project, req.user.id)) return res.status(404).json({ error: 'Project not found.' });
+    return res.json(revokeProjectShare(project.id));
+  } catch (error) {
+    return res.status(400).json({ error: error.message || 'Share link revoke failed.' });
   }
 });
 
