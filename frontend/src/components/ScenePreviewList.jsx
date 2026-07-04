@@ -7,6 +7,13 @@ export default function ScenePreviewList({ scenes = [], assets = [], resolveUrl 
           const asset = assets.find(item => item.sceneOrder === scene.order) || assets[index];
           return (
             <article className="sceneItem" key={scene.order || index}>
+              {asset?.imageUrl && (
+                <img
+                  className="sceneThumb"
+                  src={resolveUrl ? resolveUrl(asset.imageUrl) : asset.imageUrl}
+                  alt={`Scene ${scene.order || index + 1} storyboard`}
+                />
+              )}
               <strong>Scene {scene.order || index + 1}</strong>
               <p>{scene.subtitle || scene.narration}</p>
               {asset && (

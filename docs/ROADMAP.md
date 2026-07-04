@@ -11,3 +11,4 @@
 10. Brand-aware render styling for colors, subtitles, and watermark metadata
 11. Voice preset API and generated mock TTS audio manifests
 12. Voiceover audio muxed into final MP4 exports
+13. SVG storyboard thumbnails for generated scene assets
