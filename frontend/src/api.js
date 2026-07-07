@@ -298,6 +298,11 @@ export async function getProviderStatus() {
   return data.providers;
 }
 
+export async function listProviderCatalog(params = {}) {
+  const { data } = await api.get('/provider-catalog', { params });
+  return data;
+}
+
 
 export async function listJobs(params = {}) {
   const { data } = await api.get('/jobs', { params });

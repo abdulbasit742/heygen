@@ -21,6 +21,7 @@ import schedulerRoutes from './routes/scheduler.js';
 import settingsRoutes from './routes/settings.js';
 import jobsRoutes from './routes/jobs.js';
 import voiceoverRoutes from './routes/voiceover.js';
+import providerCatalogRoutes from './routes/provider-catalog.js';
 import { shareApiRoutes, sharePageRoutes } from './routes/share.js';
 
 dotenv.config();
@@ -49,6 +50,7 @@ app.use('/api/scheduler', schedulerRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/voiceover', voiceoverRoutes);
+app.use('/api/provider-catalog', providerCatalogRoutes);
 app.use('/api/share', shareApiRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/scripts', scriptRoutes);

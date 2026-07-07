@@ -25,6 +25,7 @@ HeyGen-style MVP for prompt-to-video workflows. The app includes a React dashboa
 - Media library metadata manager
 - Caption optimizer with hooks, CTAs, and hashtags
 - Client folders for organizing projects, exports, and campaign work
+- Provider catalog for vetted voice, avatar, lip-sync, and render integrations
 - Analytics dashboard for project and export counts
 - Team workspace and invite flow
 - Scheduler with mock publish flow
@@ -71,6 +72,7 @@ npm start
 - `GET /api/client-folders`
 - `POST /api/client-folders`
 - `POST /api/client-folders/:folderId/projects`
+- `GET /api/provider-catalog`
 - `DELETE /api/projects/:id`
 - `GET /api/templates`
 - `GET /api/voiceover/voices`
@@ -93,11 +95,23 @@ Rendered videos and subtitles are written to `backend/storage` and served from `
 ## Production Connections To Add
 
 - Real LLM provider for scripts
-- Replace mock TTS audio with a real TTS provider such as ElevenLabs, Azure TTS, or XTTS
-- Real avatar/lip-sync/video provider
+- Replace mock TTS audio with a real TTS provider such as Piper, Coqui TTS, ElevenLabs, Azure TTS, or a licensed XTTS/F5-TTS model
+- Real avatar/lip-sync/video provider such as SadTalker, MuseTalk, or a licensed hosted lip-sync API
 - Production database persistence such as PostgreSQL or Supabase
 - Stripe, Paddle, Razorpay, or local payment provider webhooks
 - Redis/BullMQ render workers for long-running jobs
+
+## Researched Provider Repos
+
+- Piper TTS: https://github.com/rhasspy/piper and current fork https://github.com/OHF-voice/piper1-gpl
+- Coqui TTS: https://github.com/coqui-ai/TTS
+- F5-TTS: https://github.com/SWivid/F5-TTS
+- SadTalker: https://github.com/OpenTalker/SadTalker
+- MuseTalk: https://github.com/TMElyralab/MuseTalk
+- Wav2Lip: https://github.com/Rudrabha/Wav2Lip
+- Remotion: https://github.com/remotion-dev/remotion
+
+Always review project, model, checkpoint, and media licenses before enabling a provider for paid/commercial usage.
 
 ## Safety Boundaries
 

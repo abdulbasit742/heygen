@@ -12,6 +12,7 @@ import AnalyticsDashboard from './components/AnalyticsDashboard.jsx';
 import JobMonitor from './components/JobMonitor.jsx';
 import SchedulerPanel from './components/SchedulerPanel.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
+import ProviderCatalogPanel from './components/ProviderCatalogPanel.jsx';
 import ScenePreviewList from './components/ScenePreviewList.jsx';
 import { createProject, createProjectShare, deleteProject, downloadProjectBundle, getProject, getProjectPackage, listProjects, listTemplates, listVoices, loadStoredAuth, resolveAssetUrl, retryProject, revokeProjectShare, scheduleProject, setAuthToken } from './api.js';
 import './style.css';
@@ -513,6 +514,8 @@ function App() {
       <SchedulerPanel />
 
       <SettingsPanel />
+
+      <ProviderCatalogPanel />
 
       <PricingPanel />
 

@@ -193,6 +193,96 @@
   color: #94a3b8;
 }
 
+.providerCatalogPanel {
+  display: grid;
+  gap: 14px;
+}
+
+.catalogControls {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.catalogGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.catalogCard {
+  border: 1px solid #26324a;
+  background: #111827;
+  border-radius: 14px;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.catalogCard.recommendedProvider {
+  border-color: #38bdf8;
+}
+
+.catalogHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+}
+
+.catalogHeader div {
+  display: grid;
+  gap: 4px;
+}
+
+.catalogHeader small,
+.catalogCard li {
+  color: #94a3b8;
+}
+
+.catalogColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.catalogCard h4 {
+  margin: 0 0 6px;
+}
+
+.catalogCard ul,
+.catalogCard ol {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.readiness {
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 900;
+  background: #0f172a;
+  color: #bfdbfe;
+}
+
+.readiness.configured,
+.readiness.ready-to-wire {
+  background: #052e1a;
+  color: #bbf7d0;
+}
+
+.readiness.review-required {
+  background: #3a1118;
+  color: #fecaca;
+}
+
+.readiness.needs-worker {
+  background: #3b2f0b;
+  color: #fde68a;
+}
+
 .exportPreview {
   display: grid;
   gap: 12px;
@@ -650,7 +740,9 @@
   .shareAnalyticsItem,
   .assignForm,
   .folderCardHeader,
-  .folderProjectRow {
+  .folderProjectRow,
+  .catalogHeader,
+  .catalogColumns {
     display: grid;
     grid-template-columns: 1fr;
   }
