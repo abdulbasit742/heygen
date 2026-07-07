@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { getProject, listProjects, updateProject } from './projectStore.js';
 
 const DEFAULT_SHARE_DAYS = 30;
+const REVIEW_DECISIONS = new Set(['feedback', 'changes_requested', 'approved']);
 
 function nowIso() {
   return new Date().toISOString();
@@ -21,6 +22,44 @@ function isActiveShare(share = {}) {
 
 function publicUrl(token) {
   return `/share/${token}`;
+}
+
+function cleanText(value, maxLength = 500) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, maxLength);
+}
+
+function normalizeDecision(value) {
+  return REVIEW_DECISIONS.has(value) ? value : 'feedback';
+}
+
+function statusFromDecision(decision, currentStatus = 'in_review') {
+  if (decision === 'approved') return 'approved';
+  if (decision === 'changes_requested') return 'changes_requested';
+  return currentStatus === 'approved' ? 'in_review' : currentStatus;
+}
+
+function feedbackSummary(item, includePrivate = false) {
+  return {
+    id: item.id,
+    decision: item.decision,
+    reviewerName: item.reviewerName,
+    ...(includePrivate ? { reviewerEmail: item.reviewerEmail } : {}),
+    message: item.message,
+    createdAt: item.createdAt
+  };
+}
+
+export function reviewSummary(project = {}, options = {}) {
+  const includePrivate = Boolean(options.includePrivate);
+  const feedback = project.review?.feedback || [];
+  return {
+    status: project.review?.status || 'not_started',
+    feedbackCount: feedback.length,
+    approvals: feedback.filter(item => item.decision === 'approved').length,
+    changesRequested: feedback.filter(item => item.decision === 'changes_requested').length,
+    latestFeedbackAt: project.review?.latestFeedbackAt || feedback.at(-1)?.createdAt || null,
+    feedback: feedback.slice(-6).reverse().map(item => feedbackSummary(item, includePrivate))
+  };
 }
 
 export function createProjectShare(projectId, options = {}) {
@@ -70,7 +109,8 @@ export function shareSummary(project = {}) {
     expiresAt: project.share.expiresAt,
     revokedAt: project.share.revokedAt || null,
     viewCount: project.share.viewCount || 0,
-    lastViewedAt: project.share.lastViewedAt || null
+    lastViewedAt: project.share.lastViewedAt || null,
+    review: reviewSummary(project)
   };
 }
 
@@ -88,6 +128,41 @@ export function findProjectByShareToken(token, { countView = false } = {}) {
   return updateProject(project.id, { share });
 }
 
+export function addShareReview(token, input = {}) {
+  const project = findProjectByShareToken(token, { countView: false });
+  if (!project) throw new Error('Shared export not found or expired.');
+
+  const decision = normalizeDecision(input.decision);
+  const message = cleanText(input.message, 1200);
+  if (decision !== 'approved' && message.length < 3) {
+    throw new Error('Feedback message is required.');
+  }
+
+  const createdAt = nowIso();
+  const currentFeedback = project.review?.feedback || [];
+  const item = {
+    id: crypto.randomUUID(),
+    decision,
+    reviewerName: cleanText(input.reviewerName || input.name, 80) || 'Client reviewer',
+    reviewerEmail: cleanText(input.reviewerEmail || input.email, 120),
+    message,
+    createdAt
+  };
+  const review = {
+    status: statusFromDecision(decision, project.review?.status),
+    feedback: [...currentFeedback, item],
+    latestFeedbackAt: createdAt,
+    updatedAt: createdAt
+  };
+  const updatedProject = updateProject(project.id, { review });
+
+  return {
+    review: reviewSummary(updatedProject),
+    feedback: item,
+    share: publicSharePayload(updatedProject)
+  };
+}
+
 export function publicSharePayload(project = {}) {
   return {
     id: project.id,
@@ -98,6 +173,7 @@ export function publicSharePayload(project = {}) {
     subtitlesUrl: project.subtitlesUrl,
     completedAt: project.completedAt || null,
     share: shareSummary(project),
+    review: reviewSummary(project),
     caption: project.captionResult?.caption || '',
     hashtags: project.captionResult?.hashtags || [],
     exportMetadata: {

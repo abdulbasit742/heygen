@@ -233,7 +233,8 @@
 .exportMeta,
 .productionPack,
 .voicePreview,
-.shareBox {
+.shareBox,
+.reviewBox {
   border: 1px solid #26324a;
   background: #111827;
   border-radius: 14px;
@@ -266,6 +267,32 @@
 }
 
 .shareBox small {
+  color: #94a3b8;
+}
+
+.reviewBox {
+  display: grid;
+  gap: 12px;
+}
+
+.reviewList {
+  display: grid;
+  gap: 10px;
+}
+
+.reviewItem {
+  border: 1px solid #26324a;
+  border-radius: 12px;
+  padding: 12px;
+  background: #0f172a;
+}
+
+.reviewItem p {
+  margin: 6px 0;
+  color: #dbeafe;
+}
+
+.reviewItem small {
   color: #94a3b8;
 }
 

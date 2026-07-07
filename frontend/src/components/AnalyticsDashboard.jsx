@@ -21,6 +21,9 @@ export default function AnalyticsDashboard() {
     ['Exports', analytics.totals.exports],
     ['Shares', analytics.totals.shares || 0],
     ['Share Views', analytics.totals.shareViews || 0],
+    ['Reviews', analytics.totals.reviews || 0],
+    ['Approved', analytics.totals.approvedReviews || 0],
+    ['Change Requests', analytics.totals.changesRequested || 0],
     ['Video Minutes', analytics.totals.estimatedMinutes]
   ];
 
@@ -51,6 +54,13 @@ export default function AnalyticsDashboard() {
         {!Object.keys(analytics.byShareStatus || {}).length && <span className="muted">No shared exports yet.</span>}
       </div>
 
+      <h3>Review Status</h3>
+      <div className="tagList">
+        {Object.entries(analytics.byReviewStatus || {}).map(([status, count]) => (
+          <span className="pill" key={status}>{status}: {count}</span>
+        ))}
+      </div>
+
       <h3>Latest Projects</h3>
       <div className="projectList">
         {analytics.latestProjects.map(project => (
@@ -74,6 +84,20 @@ export default function AnalyticsDashboard() {
           </article>
         ))}
         {!(analytics.latestShares || []).length && <p className="muted">Share link create karne ke baad analytics yahan dikhegi.</p>}
+      </div>
+
+      <h3>Latest Client Reviews</h3>
+      <div className="shareAnalyticsList">
+        {(analytics.latestReviews || []).map(review => (
+          <article className="shareAnalyticsItem" key={review.id}>
+            <div>
+              <strong>{review.title}</strong>
+              <span>{review.reviewStatus} - {review.platform} - {review.feedbackCount} comments</span>
+              {review.latestFeedback && <small>{review.latestFeedback.reviewerName}: {review.latestFeedback.message || 'Approved.'}</small>}
+            </div>
+          </article>
+        ))}
+        {!(analytics.latestReviews || []).length && <p className="muted">Client review submit hone ke baad yahan dikhega.</p>}
       </div>
     </section>
   );

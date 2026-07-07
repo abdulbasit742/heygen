@@ -19,6 +19,7 @@ HeyGen-style MVP for prompt-to-video workflows. The app includes a React dashboa
 - Full ZIP export bundle with MP4, subtitles, voiceover files, storyboard assets, script, captions, and manifest
 - Revocable public share pages for completed exports
 - Share analytics with active links, statuses, and public view counts
+- Client review approvals and change requests from public share pages
 - Brand-aware renders with saved colors, subtitle styling, and watermark metadata
 - Brand kit editor for logo, colors, fonts, subtitle styling, and watermark settings
 - Media library metadata manager
@@ -65,6 +66,7 @@ npm start
 - `POST /api/projects/:id/share`
 - `DELETE /api/projects/:id/share`
 - `GET /api/share/:token`
+- `POST /api/share/:token/review`
 - `GET /share/:token`
 - `GET /api/client-folders`
 - `POST /api/client-folders`

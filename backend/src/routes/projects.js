@@ -12,7 +12,7 @@ import { buildProductionPack, finalizeProductionPack } from '../services/product
 import { createScheduledPost } from '../services/schedulerService.js';
 import { getBrandKit } from '../services/brandKitService.js';
 import { generateVoiceover } from '../services/voiceoverService.js';
-import { createProjectShare, revokeProjectShare, shareSummary } from '../services/shareService.js';
+import { createProjectShare, reviewSummary, revokeProjectShare, shareSummary } from '../services/shareService.js';
 import { createProjectBundle } from '../services/exportBundleService.js';
 
 const router = Router();
@@ -41,6 +41,7 @@ function exportPayload(project) {
     visualAssets: project.visualAssets || [],
     scheduledPostIds: project.scheduledPostIds || [],
     share: shareSummary(project),
+    review: reviewSummary(project, { includePrivate: true }),
     scenes: project.scenes || [],
     completedAt: project.completedAt || null
   };
@@ -97,6 +98,7 @@ function buildExportPackage(project) {
     scenes: project.scenes || [],
     visualAssets: project.visualAssets || [],
     share: shareSummary(project),
+    review: reviewSummary(project, { includePrivate: true }),
     schedulerDefaults: {
       title: project.title,
       caption: captionForSchedule(project),

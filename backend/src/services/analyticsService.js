@@ -17,10 +17,15 @@ function shareStatus(project) {
   return 'active';
 }
 
+function reviewStatus(project) {
+  return project.review?.status || 'not_started';
+}
+
 export function getAnalyticsSummary(userId) {
   const projects = listProjects().filter(project => !project.userId || project.userId === userId);
   const exports = projects.filter(project => project.outputUrl);
   const sharedProjects = projects.filter(project => project.share?.token);
+  const reviewedProjects = projects.filter(project => project.review?.feedback?.length);
   const usage = getUsage(userId);
 
   const totalDurationSeconds = projects.reduce((sum, project) => {
@@ -38,12 +43,16 @@ export function getAnalyticsSummary(userId) {
       shares: sharedProjects.length,
       activeShares: sharedProjects.filter(project => shareStatus(project) === 'active').length,
       shareViews: sharedProjects.reduce((sum, project) => sum + (project.share?.viewCount || 0), 0),
+      reviews: reviewedProjects.reduce((sum, project) => sum + (project.review?.feedback?.length || 0), 0),
+      approvedReviews: reviewedProjects.filter(project => reviewStatus(project) === 'approved').length,
+      changesRequested: reviewedProjects.filter(project => reviewStatus(project) === 'changes_requested').length,
       estimatedMinutes: Math.round(totalDurationSeconds / 60)
     },
     usage,
     byPlatform: countBy(projects, project => project.platform),
     byStatus: countBy(projects, project => project.status),
     byShareStatus: countBy(sharedProjects, project => shareStatus(project)),
+    byReviewStatus: countBy(projects, reviewStatus),
     latestProjects: projects.slice(0, 6).map(project => ({
       id: project.id,
       title: project.title,
@@ -66,6 +75,19 @@ export function getAnalyticsSummary(userId) {
         createdAt: project.share.createdAt,
         expiresAt: project.share.expiresAt,
         lastViewedAt: project.share.lastViewedAt || null
+      })),
+    latestReviews: reviewedProjects
+      .slice()
+      .sort((a, b) => String(b.review?.latestFeedbackAt || '').localeCompare(String(a.review?.latestFeedbackAt || '')))
+      .slice(0, 6)
+      .map(project => ({
+        id: project.id,
+        title: project.title,
+        platform: project.platform,
+        reviewStatus: reviewStatus(project),
+        feedbackCount: project.review?.feedback?.length || 0,
+        latestFeedbackAt: project.review?.latestFeedbackAt || null,
+        latestFeedback: project.review?.feedback?.at(-1) || null
       }))
   };
 }

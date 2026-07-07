@@ -111,6 +111,14 @@ function App() {
     setProjects(nextProjects);
   }
 
+  async function refreshActiveProject() {
+    if (!activeProject) return;
+    const updated = await getProject(activeProject.id);
+    setActiveProject(updated);
+    setProjects(current => current.map(project => project.id === updated.id ? updated : project));
+    setProjectMessage('Project refreshed.');
+  }
+
   async function submitProject(event) {
     event.preventDefault();
     setLoading(true);
@@ -387,9 +395,29 @@ function App() {
                   <input readOnly value={resolveAssetUrl(activeProject.share.shareUrl)} onFocus={event => event.target.select()} />
                   <div className="inlineActions">
                     <a className="download smallDownload" href={resolveAssetUrl(activeProject.share.shareUrl)} target="_blank" rel="noreferrer">Open Share Page</a>
+                    <button type="button" onClick={refreshActiveProject}>Refresh Reviews</button>
                     <button type="button" onClick={revokeActiveShare}>Revoke Share</button>
                   </div>
                   <small>Expires: {new Date(activeProject.share.expiresAt).toLocaleString()} - Views: {activeProject.share.viewCount || 0}</small>
+                </div>
+              )}
+              {activeProject.review?.feedback?.length > 0 && (
+                <div className="reviewBox">
+                  <strong>Client Review</strong>
+                  <div className="exportMeta">
+                    <span>Status: {activeProject.review.status?.replaceAll('_', ' ')}</span>
+                    <span>{activeProject.review.feedback.length} comments</span>
+                    {activeProject.review.latestFeedbackAt && <span>Latest: {new Date(activeProject.review.latestFeedbackAt).toLocaleString()}</span>}
+                  </div>
+                  <div className="reviewList">
+                    {activeProject.review.feedback.slice(-4).reverse().map(item => (
+                      <article className="reviewItem" key={item.id}>
+                        <strong>{item.reviewerName || 'Client reviewer'} - {item.decision?.replaceAll('_', ' ')}</strong>
+                        <p>{item.message || 'Approved.'}</p>
+                        <small>{new Date(item.createdAt).toLocaleString()}</small>
+                      </article>
+                    ))}
+                  </div>
                 </div>
               )}
               {activeProject.voiceover?.audioUrl && (
