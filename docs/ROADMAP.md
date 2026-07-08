@@ -19,3 +19,4 @@
 18. Client review approvals and change requests from public share pages
 19. Provider catalog for open-source voice, avatar, lip-sync, and render integration planning
 20. Provider setup plans with env readiness, worker manifests, and output contracts
+21. Provider worker dry-run jobs that validate setup before real execution

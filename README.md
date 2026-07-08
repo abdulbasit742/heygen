@@ -26,6 +26,7 @@ HeyGen-style MVP for prompt-to-video workflows. The app includes a React dashboa
 - Caption optimizer with hooks, CTAs, and hashtags
 - Client folders for organizing projects, exports, and campaign work
 - Provider catalog for vetted voice, avatar, lip-sync, and render integrations
+- Provider worker dry-runs that create safe handoff jobs before real execution
 - Analytics dashboard for project and export counts
 - Team workspace and invite flow
 - Scheduler with mock publish flow
@@ -74,6 +75,7 @@ npm start
 - `POST /api/client-folders/:folderId/projects`
 - `GET /api/provider-catalog`
 - `GET /api/provider-catalog/:providerId/setup`
+- `POST /api/provider-catalog/:providerId/jobs`
 - `DELETE /api/projects/:id`
 - `GET /api/templates`
 - `GET /api/voiceover/voices`
@@ -102,6 +104,7 @@ Rendered videos and subtitles are written to `backend/storage` and served from `
 - Stripe, Paddle, Razorpay, or local payment provider webhooks
 - Redis/BullMQ render workers for long-running jobs
 - Provider worker manifests from `/api/provider-catalog/:providerId/setup`
+- Safe provider dry-run jobs from `/api/provider-catalog/:providerId/jobs`
 
 ## Researched Provider Repos
 

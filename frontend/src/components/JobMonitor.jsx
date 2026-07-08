@@ -64,6 +64,14 @@ export default function JobMonitor() {
               <span>{job.type} - {job.status} - {job.progress}%</span>
             </div>
             <progress value={job.progress} max="100" />
+            {job.type === 'provider_worker' && (
+              <div className="jobResultBox">
+                <strong>{job.payload?.providerName || job.result?.providerName}</strong>
+                <span>{job.result?.message || 'Provider worker dry-run queued.'}</span>
+                {job.result?.commandTemplate && <code>{job.result.commandTemplate}</code>}
+                {job.result?.missingEnv?.length > 0 && <small>Missing env: {job.result.missingEnv.join(', ')}</small>}
+              </div>
+            )}
             <div className="jobActions">
               <button type="button" onClick={() => retry(job)}>Retry</button>
               <button type="button" onClick={() => action(cancelJob, job.id)}>Cancel</button>

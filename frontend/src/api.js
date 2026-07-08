@@ -308,6 +308,11 @@ export async function getProviderSetup(providerId) {
   return data;
 }
 
+export async function createProviderWorkerJob(providerId, payload = {}) {
+  const { data } = await api.post(`/provider-catalog/${providerId}/jobs`, payload);
+  return data.job;
+}
+
 
 export async function listJobs(params = {}) {
   const { data } = await api.get('/jobs', { params });

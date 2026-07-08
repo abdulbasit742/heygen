@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { getProviderSetup, listProviderCatalog } from '../api.js';
+import { createProviderWorkerJob, getProviderSetup, listProviderCatalog } from '../api.js';
 
 const CATEGORY_LABELS = {
   all: 'All',
@@ -18,6 +18,7 @@ export default function ProviderCatalogPanel() {
   const [category, setCategory] = useState('all');
   const [recommendedOnly, setRecommendedOnly] = useState(false);
   const [setupPlan, setSetupPlan] = useState(null);
+  const [jobMessage, setJobMessage] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -45,6 +46,20 @@ export default function ProviderCatalogPanel() {
       setError('');
     } catch {
       setError('Provider setup plan load nahi ho saka.');
+    }
+  }
+
+  async function createDryRunJob() {
+    if (!setupPlan) return;
+    try {
+      const job = await createProviderWorkerJob(setupPlan.provider.id, {
+        title: `${setupPlan.provider.name} dry-run worker`,
+        request: setupPlan.setup.workerManifest.sampleRequest
+      });
+      setJobMessage(`Dry-run job created: ${job.status} (${job.id})`);
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Provider dry-run job create nahi ho saka.');
     }
   }
 
@@ -140,8 +155,13 @@ export default function ProviderCatalogPanel() {
               <h3>{setupPlan.provider.name} Setup Plan</h3>
               <p className="muted">{setupPlan.provider.repo}</p>
             </div>
-            <button type="button" className="tiny" onClick={() => setSetupPlan(null)}>Close</button>
+            <div className="inlineActions">
+              <button type="button" onClick={createDryRunJob}>Create Dry Run Job</button>
+              <button type="button" className="tiny" onClick={() => setSetupPlan(null)}>Close</button>
+            </div>
           </div>
+
+          {jobMessage && <p className="success">{jobMessage}</p>}
 
           <div className="folderMetrics">
             <span>{readinessLabel(setupPlan.setup.readiness)}</span>

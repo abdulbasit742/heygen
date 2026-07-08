@@ -779,6 +779,26 @@
   gap: 8px;
 }
 
+.jobResultBox {
+  border: 1px solid #26324a;
+  border-radius: 12px;
+  background: #0f172a;
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.jobResultBox span,
+.jobResultBox small {
+  color: #94a3b8;
+}
+
+.jobResultBox code {
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #dbeafe;
+}
+
 .jobActions button {
   padding: 8px 10px;
   border-radius: 10px;
