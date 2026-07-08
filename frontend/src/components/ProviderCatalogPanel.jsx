@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { listProviderCatalog } from '../api.js';
+import { getProviderSetup, listProviderCatalog } from '../api.js';
 
 const CATEGORY_LABELS = {
   all: 'All',
@@ -17,6 +17,7 @@ export default function ProviderCatalogPanel() {
   const [catalog, setCatalog] = useState({ providers: [], summary: null });
   const [category, setCategory] = useState('all');
   const [recommendedOnly, setRecommendedOnly] = useState(false);
+  const [setupPlan, setSetupPlan] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -37,6 +38,15 @@ export default function ProviderCatalogPanel() {
   }
 
   const categories = useMemo(() => Object.keys(CATEGORY_LABELS), []);
+
+  async function openSetup(providerId) {
+    try {
+      setSetupPlan(await getProviderSetup(providerId));
+      setError('');
+    } catch {
+      setError('Provider setup plan load nahi ho saka.');
+    }
+  }
 
   return (
     <section className="card providerCatalogPanel">
@@ -113,6 +123,7 @@ export default function ProviderCatalogPanel() {
             </ol>
 
             <div className="inlineActions">
+              <button type="button" onClick={() => openSetup(provider.id)}>Setup Plan</button>
               <a className="download smallDownload" href={provider.repo} target="_blank" rel="noreferrer">Open Repo</a>
               {provider.currentRepo && (
                 <a className="download smallDownload" href={provider.currentRepo} target="_blank" rel="noreferrer">Current Fork</a>
@@ -121,6 +132,56 @@ export default function ProviderCatalogPanel() {
           </article>
         ))}
       </div>
+
+      {setupPlan && (
+        <section className="setupPlanPanel">
+          <div className="sectionHeader">
+            <div>
+              <h3>{setupPlan.provider.name} Setup Plan</h3>
+              <p className="muted">{setupPlan.provider.repo}</p>
+            </div>
+            <button type="button" className="tiny" onClick={() => setSetupPlan(null)}>Close</button>
+          </div>
+
+          <div className="folderMetrics">
+            <span>{readinessLabel(setupPlan.setup.readiness)}</span>
+            <span>{setupPlan.provider.setupMode.replaceAll('_', ' ')}</span>
+            <span>{setupPlan.provider.license}</span>
+          </div>
+
+          <h4>Checklist</h4>
+          <div className="setupChecklist">
+            {setupPlan.setup.checklist.map(item => (
+              <article className={item.done ? 'setupItem done' : 'setupItem'} key={item.id}>
+                <strong>{item.done ? 'Ready' : 'Pending'}: {item.label}</strong>
+                <small>{item.detail}</small>
+              </article>
+            ))}
+          </div>
+
+          <div className="catalogColumns">
+            <div>
+              <h4>Environment</h4>
+              <div className="setupEnvList">
+                {setupPlan.setup.env.map(item => (
+                  <span className={item.configured ? 'pill readyPill' : 'pill'} key={item.key}>
+                    {item.key}: {item.configured ? 'configured' : 'missing'}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4>Outputs</h4>
+              <div className="setupEnvList">
+                {setupPlan.setup.workerManifest.outputs.map(item => <span className="pill" key={item}>{item}</span>)}
+              </div>
+            </div>
+          </div>
+
+          <h4>Worker Manifest</h4>
+          <pre className="manifestBlock">{JSON.stringify(setupPlan.setup.workerManifest, null, 2)}</pre>
+        </section>
+      )}
     </section>
   );
 }

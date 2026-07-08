@@ -73,6 +73,7 @@ npm start
 - `POST /api/client-folders`
 - `POST /api/client-folders/:folderId/projects`
 - `GET /api/provider-catalog`
+- `GET /api/provider-catalog/:providerId/setup`
 - `DELETE /api/projects/:id`
 - `GET /api/templates`
 - `GET /api/voiceover/voices`
@@ -100,6 +101,7 @@ Rendered videos and subtitles are written to `backend/storage` and served from `
 - Production database persistence such as PostgreSQL or Supabase
 - Stripe, Paddle, Razorpay, or local payment provider webhooks
 - Redis/BullMQ render workers for long-running jobs
+- Provider worker manifests from `/api/provider-catalog/:providerId/setup`
 
 ## Researched Provider Repos
 

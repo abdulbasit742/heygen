@@ -283,6 +283,62 @@
   color: #fde68a;
 }
 
+.setupPlanPanel {
+  border: 1px solid #334155;
+  background: #0f172a;
+  border-radius: 14px;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.setupChecklist {
+  display: grid;
+  gap: 8px;
+}
+
+.setupItem {
+  border: 1px solid #3a1118;
+  background: #1f1116;
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.setupItem.done {
+  border-color: #14532d;
+  background: #052e1a;
+}
+
+.setupItem small {
+  color: #cbd5e1;
+}
+
+.setupEnvList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.readyPill {
+  color: #bbf7d0;
+  border-color: #14532d;
+  background: #052e1a;
+}
+
+.manifestBlock {
+  overflow: auto;
+  max-height: 340px;
+  border: 1px solid #26324a;
+  border-radius: 12px;
+  background: #020617;
+  color: #dbeafe;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .exportPreview {
   display: grid;
   gap: 12px;

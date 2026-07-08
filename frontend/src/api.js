@@ -303,6 +303,11 @@ export async function listProviderCatalog(params = {}) {
   return data;
 }
 
+export async function getProviderSetup(providerId) {
+  const { data } = await api.get(`/provider-catalog/${providerId}/setup`);
+  return data;
+}
+
 
 export async function listJobs(params = {}) {
   const { data } = await api.get('/jobs', { params });
