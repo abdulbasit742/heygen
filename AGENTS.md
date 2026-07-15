@@ -2,45 +2,50 @@
 
 ## Scope
 
-These instructions apply to the entire `abdulbasit742/heygen` repository. More specific AGENTS.md or AGENTS.override.md files in subdirectories may refine them.
+These instructions apply to the entire `abdulbasit742/heygen` repository.
 
-Project: **AI Avatar Video Studio**.
+Project: **AI Avatar Video Studio**, with an Express backend, React/Vite frontend, FFmpeg render pipeline, JSON-file MVP persistence, public capability links, and provider dry-run jobs.
 
-Detected root stack: **Node.js**.
+## Trust boundaries
+
+- Browser sessions are server-owned HttpOnly cookies. Do not reintroduce access tokens in `localStorage`, sessionStorage, URLs, or React state.
+- `backend/src/config/runtimePolicy.mjs` is the source of truth for origins, session lifetime, cookie mode, and required signing secret.
+- Provider credentials remain server-side and optional.
+- Public share URLs are bearer capabilities: keep them random, expiring, revocable, no-store, and data-minimized.
+- Generated files under storage/data/generated-assets are runtime artifacts and must not be committed.
 
 ## Working method
 
-1. Read README.md, the relevant manifests, and nearby tests before editing.
-2. Check the current diff and preserve unrelated user changes.
-3. Make the smallest coherent change that solves the task; follow existing names, patterns, and directory boundaries.
-4. Do not hand-edit generated, vendored, dependency, build-output, model-weight, or dataset files unless the task explicitly targets them.
-5. Update tests and documentation when behavior, configuration, public APIs, or setup steps change.
+1. Read `README.md`, `docs/security-audit.md`, the relevant manifests, routes, service modules, and tests before editing.
+2. Preserve project ownership checks and validate untrusted route, media, provider, and review inputs.
+3. Keep authentication, rendering, scheduling, provider execution, sharing, and billing side effects explicit and bounded.
+4. Do not hand-edit generated media, bundles, dependency trees, or persisted runtime JSON.
+5. Update tests and documentation whenever public routes, session behavior, environment variables, or provider/media handling changes.
 
 ## Commands
 
-- Use the package manager selected by the committed lockfile. Do not replace lockfiles or package managers unless the task requires it.
-- Install dependencies with the matching clean/frozen install when possible; otherwise use `npm install`.
-- dev: `npm run dev`.
-- start: `npm run start`.
-- build: `npm run build`.
+```bash
+npm run install:all
+npm run test
+npm run security-check
+npm run build
+npm run dev
+```
 
-## Verification
+## Security requirements
 
-- Run the narrowest relevant test first, then the repository's available lint, type-check, test, and build commands.
-- Never report a check as passed unless it was actually run. State skipped checks and the concrete reason.
-- For UI changes, verify loading, empty, error, and success states plus keyboard access and responsive layout.
-- For API or persistence changes, verify validation, authorization, failure behavior, and backward compatibility.
-
-## Security and side effects
-
-- Never commit secrets, tokens, passwords, private keys, production data, or populated environment files. Use documented environment variables and sanitized examples.
-- Treat migrations, deployments, billing, live network calls, account changes, destructive Git operations, and external messages as side effects. Do not perform them without explicit task authorization.
-- Validate untrusted input at trust boundaries and avoid logging credentials, personal data, prompts containing secrets, or raw third-party payloads.
-- AI/model integrations: keep provider credentials server-side, validate model output before side effects, use bounded retries/timeouts, and retain a deterministic non-AI failure path.
+- Never add a fallback JWT secret or wildcard credentialed CORS.
+- Use HTTPS and Secure cookies in production.
+- Do not return browser session tokens from login/signup responses.
+- Keep mutation-origin checks and bounded authentication attempts.
+- Do not collect reviewer email or other unnecessary personal data on public capability pages.
+- Treat model output, prompts, uploaded media, archive contents, captions, filenames, and provider responses as untrusted.
+- Do not enable real publishing, voice/likeness cloning, provider billing, or third-party execution without explicit consent, authorization, audit logging, limits, and license review.
+- Static media URLs are not private; do not claim confidentiality until authenticated media delivery exists.
 
 ## Completion checklist
 
-- The requested behavior is implemented with a focused diff.
-- Relevant automated checks pass, or any unavailable checks are clearly identified.
-- No secrets, generated artifacts, or unrelated formatting churn were introduced.
-- The final handoff summarizes changed files, verification evidence, risks, and any follow-up work.
+- Relevant policy tests, security scanner, syntax checks, and frontend build pass or unavailable checks are stated precisely.
+- No secrets, populated environment files, runtime data, or generated media are introduced.
+- Browser token persistence, wildcard origins, and unbounded public writes do not regress.
+- Documentation reflects any changed session, share, media, provider, or deployment contract.
