@@ -53,7 +53,7 @@ export function loadRuntimeConfig(env = process.env) {
     jwtAudience: 'heygen-frontend',
     sessionHours,
     sessionCookieName: 'heygen_session',
-    cookieSecure: parseBoolean(env.SESSION_COOKIE_SECURE, nodeEnv === 'production'),
+    cookieSecure: nodeEnv === 'production' ? true : parseBoolean(env.SESSION_COOKIE_SECURE, false),
     frontendOrigins,
     jsonLimit: String(env.JSON_BODY_LIMIT || '512kb'),
   });
