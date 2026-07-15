@@ -1,0 +1,52 @@
+name: Verify AI video studio
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: heygen-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.19, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+            frontend/package-lock.json
+      - name: Install project dependencies
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm --prefix backend ci --ignore-scripts --no-audit --no-fund
+          npm --prefix frontend ci --ignore-scripts --no-audit --no-fund
+      - name: Check active JavaScript syntax
+        run: |
+          node --check backend/src/config/runtimePolicy.mjs
+          node --check backend/src/config/runtime.js
+          node --check backend/src/security/sessionPolicy.mjs
+          node --check backend/src/middleware/auth.js
+          node --check backend/src/routes/auth.js
+          node --check backend/src/routes/share.js
+          node --check backend/src/services/shareService.js
+          node --check backend/src/server.js
+          node --check frontend/src/api.js
+      - name: Run policy tests and security scanner
+        run: |
+          npm run test
+          npm run security-check
+      - name: Build frontend
+        run: npm run build
