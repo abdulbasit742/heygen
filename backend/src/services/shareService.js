@@ -3,6 +3,7 @@ import { getProject, listProjects, updateProject } from './projectStore.js';
 
 const DEFAULT_SHARE_DAYS = 30;
 const REVIEW_DECISIONS = new Set(['feedback', 'changes_requested', 'approved']);
+const SHARE_TOKEN_PATTERN = /^[a-f0-9]{36}$/;
 
 function nowIso() {
   return new Date().toISOString();
@@ -14,8 +15,13 @@ function addDays(days) {
   return date.toISOString();
 }
 
+function boundedShareDays(value) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? Math.min(365, Math.max(1, parsed)) : DEFAULT_SHARE_DAYS;
+}
+
 function isActiveShare(share = {}) {
-  if (!share.enabled || !share.token) return false;
+  if (!share.enabled || !SHARE_TOKEN_PATTERN.test(String(share.token || ''))) return false;
   if (!share.expiresAt) return true;
   return new Date(share.expiresAt).getTime() > Date.now();
 }
@@ -25,7 +31,7 @@ function publicUrl(token) {
 }
 
 function cleanText(value, maxLength = 500) {
-  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, maxLength);
+  return String(value || '').normalize('NFKC').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, maxLength);
 }
 
 function normalizeDecision(value) {
@@ -38,27 +44,25 @@ function statusFromDecision(decision, currentStatus = 'in_review') {
   return currentStatus === 'approved' ? 'in_review' : currentStatus;
 }
 
-function feedbackSummary(item, includePrivate = false) {
+function feedbackSummary(item) {
   return {
     id: item.id,
     decision: item.decision,
     reviewerName: item.reviewerName,
-    ...(includePrivate ? { reviewerEmail: item.reviewerEmail } : {}),
     message: item.message,
-    createdAt: item.createdAt
+    createdAt: item.createdAt,
   };
 }
 
-export function reviewSummary(project = {}, options = {}) {
-  const includePrivate = Boolean(options.includePrivate);
+export function reviewSummary(project = {}) {
   const feedback = project.review?.feedback || [];
   return {
     status: project.review?.status || 'not_started',
     feedbackCount: feedback.length,
-    approvals: feedback.filter(item => item.decision === 'approved').length,
-    changesRequested: feedback.filter(item => item.decision === 'changes_requested').length,
+    approvals: feedback.filter((item) => item.decision === 'approved').length,
+    changesRequested: feedback.filter((item) => item.decision === 'changes_requested').length,
     latestFeedbackAt: project.review?.latestFeedbackAt || feedback.at(-1)?.createdAt || null,
-    feedback: feedback.slice(-6).reverse().map(item => feedbackSummary(item, includePrivate))
+    feedback: feedback.slice(-6).reverse().map(feedbackSummary),
   };
 }
 
@@ -69,7 +73,7 @@ export function createProjectShare(projectId, options = {}) {
     throw new Error('Project must be completed before sharing.');
   }
 
-  const ttlDays = Math.max(1, Math.min(365, Number(options.ttlDays || DEFAULT_SHARE_DAYS)));
+  const ttlDays = boundedShareDays(options.ttlDays);
   const existingViews = project.share?.viewCount || 0;
   const share = {
     token: crypto.randomBytes(18).toString('hex'),
@@ -77,7 +81,7 @@ export function createProjectShare(projectId, options = {}) {
     createdAt: nowIso(),
     expiresAt: addDays(ttlDays),
     viewCount: existingViews,
-    lastViewedAt: project.share?.lastViewedAt || null
+    lastViewedAt: project.share?.lastViewedAt || null,
   };
 
   const updatedProject = updateProject(projectId, { share });
@@ -91,7 +95,7 @@ export function revokeProjectShare(projectId) {
   const share = {
     ...(project.share || {}),
     enabled: false,
-    revokedAt: nowIso()
+    revokedAt: nowIso(),
   };
 
   const updatedProject = updateProject(projectId, { share });
@@ -110,12 +114,14 @@ export function shareSummary(project = {}) {
     revokedAt: project.share.revokedAt || null,
     viewCount: project.share.viewCount || 0,
     lastViewedAt: project.share.lastViewedAt || null,
-    review: reviewSummary(project)
+    review: reviewSummary(project),
   };
 }
 
 export function findProjectByShareToken(token, { countView = false } = {}) {
-  const project = listProjects().find(item => item.share?.token === token);
+  const safeToken = String(token || '').toLowerCase();
+  if (!SHARE_TOKEN_PATTERN.test(safeToken)) return null;
+  const project = listProjects().find((item) => item.share?.token === safeToken);
   if (!project || !isActiveShare(project.share)) return null;
 
   if (!countView) return project;
@@ -123,7 +129,7 @@ export function findProjectByShareToken(token, { countView = false } = {}) {
   const share = {
     ...project.share,
     viewCount: (project.share.viewCount || 0) + 1,
-    lastViewedAt: nowIso()
+    lastViewedAt: nowIso(),
   };
   return updateProject(project.id, { share });
 }
@@ -144,22 +150,21 @@ export function addShareReview(token, input = {}) {
     id: crypto.randomUUID(),
     decision,
     reviewerName: cleanText(input.reviewerName || input.name, 80) || 'Client reviewer',
-    reviewerEmail: cleanText(input.reviewerEmail || input.email, 120),
     message,
-    createdAt
+    createdAt,
   };
   const review = {
     status: statusFromDecision(decision, project.review?.status),
-    feedback: [...currentFeedback, item],
+    feedback: [...currentFeedback.slice(-199), item],
     latestFeedbackAt: createdAt,
-    updatedAt: createdAt
+    updatedAt: createdAt,
   };
   const updatedProject = updateProject(project.id, { review });
 
   return {
     review: reviewSummary(updatedProject),
     feedback: item,
-    share: publicSharePayload(updatedProject)
+    share: publicSharePayload(updatedProject),
   };
 }
 
@@ -183,19 +188,19 @@ export function publicSharePayload(project = {}) {
       durationSeconds: project.exportMetadata?.durationSeconds || null,
       audioMuxed: Boolean(project.exportMetadata?.audioMuxed),
       audioCodec: project.exportMetadata?.audioCodec || null,
-      brandName: project.exportMetadata?.brandKit?.name || null
+      brandName: project.exportMetadata?.brandKit?.name || null,
     },
-    visualAssets: (project.visualAssets || []).map(asset => ({
+    visualAssets: (project.visualAssets || []).map((asset) => ({
       sceneOrder: asset.sceneOrder,
       type: asset.type,
       imageUrl: asset.imageUrl,
       assetUrl: asset.assetUrl,
-      prompt: asset.prompt
+      prompt: asset.prompt,
     })),
-    scenes: (project.scenes || []).map(scene => ({
+    scenes: (project.scenes || []).map((scene) => ({
       order: scene.order,
       subtitle: scene.subtitle,
-      durationSeconds: scene.durationSeconds
-    }))
+      durationSeconds: scene.durationSeconds,
+    })),
   };
 }
