@@ -24,7 +24,7 @@ test('rejects origin paths and credentials', () => {
 test('loads bounded session and port settings', () => {
   const config = loadRuntimeConfig({
     NODE_ENV: 'production', JWT_SECRET: 'x'.repeat(48), FRONTEND_URL: 'https://studio.example',
-    SESSION_HOURS: '999', PORT: '99999', SESSION_COOKIE_SECURE: 'true',
+    SESSION_HOURS: '999', PORT: '99999', SESSION_COOKIE_SECURE: 'false',
   });
   assert.equal(config.sessionHours, 168);
   assert.equal(config.port, 65535);
