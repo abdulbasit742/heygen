@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import healthRoutes from './routes/health.js';
 import aiScriptRoutes from './routes/ai-script.js';
 import projectRoutes from './routes/projects.js';
@@ -23,16 +22,51 @@ import jobsRoutes from './routes/jobs.js';
 import voiceoverRoutes from './routes/voiceover.js';
 import providerCatalogRoutes from './routes/provider-catalog.js';
 import { shareApiRoutes, sharePageRoutes } from './routes/share.js';
+import { getRuntimeConfig } from './config/runtime.js';
+import { isTrustedMutation } from './security/sessionPolicy.mjs';
 
-dotenv.config();
-
+const config = getRuntimeConfig();
 const app = express();
-const PORT = process.env.PORT || 4000;
+app.disable('x-powered-by');
 
-app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
-app.use(express.json({ limit: '2mb' }));
-app.use('/generated-assets', express.static('generated-assets'));
-app.use('/media', express.static(process.env.STORAGE_DIR || 'storage'));
+function requestOrigin(req) {
+  return `${req.protocol}://${req.get('host')}`;
+}
+
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'same-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
+
+app.use(cors((req, callback) => {
+  const origin = req.headers.origin;
+  const allowed = !origin || origin === requestOrigin(req) || config.frontendOrigins.includes(origin);
+  callback(null, {
+    origin: allowed ? origin || false : false,
+    credentials: true,
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 600,
+  });
+}));
+
+app.use('/api', (req, res, next) => {
+  const allowedOrigins = [...config.frontendOrigins, requestOrigin(req)];
+  const trusted = isTrustedMutation({
+    method: req.method,
+    origin: req.headers.origin,
+    secFetchSite: req.headers['sec-fetch-site'],
+  }, allowedOrigins);
+  if (!trusted) return res.status(403).json({ error: 'Cross-site mutation blocked.' });
+  return next();
+});
+
+app.use(express.json({ limit: config.jsonLimit }));
+app.use('/generated-assets', express.static('generated-assets', { fallthrough: false, immutable: false }));
+app.use('/media', express.static(process.env.STORAGE_DIR || 'storage', { fallthrough: false, immutable: false }));
 
 app.use('/health', healthRoutes);
 app.use('/api/auth', authRoutes);
@@ -64,9 +98,10 @@ app.use((req, res) => {
 
 app.use((err, _req, res, _next) => {
   console.error(err);
-  res.status(500).json({ error: 'Internal server error.' });
+  const status = Number.isInteger(err?.status) ? err.status : 500;
+  res.status(status).json({ error: status === 500 ? 'Internal server error.' : err.message });
 });
 
-app.listen(PORT, () => {
-  console.log(`AI Avatar Video backend running on http://localhost:${PORT}`);
+app.listen(config.port, () => {
+  console.log(`AI Avatar Video backend running on http://localhost:${config.port}`);
 });
