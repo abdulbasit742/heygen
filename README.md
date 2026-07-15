@@ -1,68 +1,99 @@
 # AI Avatar Video Studio
 
-HeyGen-style MVP for prompt-to-video workflows. The app includes a React dashboard, Express API, auth, subscriptions, brand kit, media library, caption tools, analytics, scheduler, render job monitor, and a bundled FFmpeg render endpoint.
+HeyGen-style MVP for prompt-to-video workflows. The app includes a React dashboard, Express API, creator accounts, templates, brand settings, render jobs, exports, scheduling, provider handoff plans, and revocable client-review links.
 
-## What Works
+## Current capabilities
 
-- Email/password signup and login with JWT sessions
-- Prompt-to-script and AI scene plan endpoints
-- Ready-made templates for motivation reels, ads, explainers, and agency pitches
-- Avatar picker and safe avatar job placeholder
-- Project creation with generated script, scenes, render job tracking, and MP4 export
-- Project retry and render job linkage
-- Voice preset API with generated mock TTS WAV audio and manifest per project
-- Final MP4 export muxes generated voiceover into an AAC audio track
-- Auto captions, hashtags, and export metadata saved per project
-- Production pack saved per project with avatar job, voiceover manifest, scene assets, and export checklist
-- Scene generator creates provider-safe SVG storyboard thumbnails plus asset manifests
-- Export package manifest download and one-click scheduling from completed projects
-- Full ZIP export bundle with MP4, subtitles, voiceover files, storyboard assets, script, captions, and manifest
-- Revocable public share pages for completed exports
-- Share analytics with active links, statuses, and public view counts
-- Client review approvals and change requests from public share pages
-- Brand-aware renders with saved colors, subtitle styling, and watermark metadata
-- Brand kit editor for logo, colors, fonts, subtitle styling, and watermark settings
-- Media library metadata manager
-- Caption optimizer with hooks, CTAs, and hashtags
-- Client folders for organizing projects, exports, and campaign work
-- Provider catalog for vetted voice, avatar, lip-sync, and render integrations
-- Provider worker dry-runs that create safe handoff jobs before real execution
-- Analytics dashboard for project and export counts
-- Team workspace and invite flow
-- Scheduler with mock publish flow
-- Background job monitor with retry/cancel actions
-- MP4 render endpoint using `ffmpeg-static`
+- Email/password creator accounts with server-owned HttpOnly cookie sessions
+- Prompt-to-script and AI scene-plan endpoints
+- Templates for short-form video workflows
+- Avatar and voice preset selection
+- Project creation, retry, progress tracking, and MP4 export
+- Voiceover, captions, scene thumbnails, brand snapshots, and production packs
+- ZIP export bundles and project package manifests
+- Revocable, expiring public share links with bounded client feedback
+- Client folders, workspace invites, analytics, settings, scheduler mocks, and job monitoring
+- Provider catalog and dry-run handoff jobs before any real provider execution
+- FFmpeg-based local render endpoint
 
-## Quick Start
+The scheduler remains a mock publishing flow. Provider jobs are dry runs unless a separately reviewed integration is explicitly enabled.
 
-Requirements:
+## Requirements
 
-- Node.js 20.19+ or 22.12+
+- Node.js 20.19+ or 22+
+
+## Local setup
 
 ```bash
 npm run install:all
-copy backend\.env.example backend\.env
+cp backend/.env.example backend/.env
+```
+
+Generate a session secret and put the result in `backend/.env`:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+```
+
+Minimum local configuration:
+
+```dotenv
+NODE_ENV=development
+FRONTEND_URL=http://localhost:5173
+JWT_SECRET=<generated value of at least 32 characters>
+SESSION_HOURS=12
+SESSION_COOKIE_SECURE=false
+```
+
+Start both applications:
+
+```bash
 npm run dev
 ```
 
-Frontend: http://localhost:5173
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:4000`
 
-Backend: http://localhost:4000
+The backend fails to start when `JWT_SECRET` is missing, short, or a known placeholder. Production also requires an explicit frontend origin. Use HTTPS and `SESSION_COOKIE_SECURE=true` in production.
 
-## Build
+## Session and origin model
+
+Browser authentication uses an HttpOnly, SameSite=Lax cookie. The JavaScript client does not store or attach a bearer token. A small user-display hint may be kept in `sessionStorage`; it is not authorization and disappears with the browser session. The server verifies the signed cookie on every protected request.
+
+Credentialed browser requests are accepted only from `FRONTEND_URL` or comma-separated `FRONTEND_ORIGINS`. State-changing cross-site requests are rejected. Bearer tokens remain accepted by protected routes only as a compatibility path for trusted non-browser API clients that obtain a valid signed token outside this browser flow.
+
+## Public review links
+
+A share link is a capability URL. Anyone who has it can view that export and submit a review until it expires or is revoked.
+
+- tokens are random and expiration-bound;
+- review submissions are rate limited;
+- reviewer email is not collected or retained;
+- pages and API responses use `no-store`, and pages request `noindex`;
+- feedback history is bounded.
+
+Do not place sensitive source media, personal data, or confidential client content in a public share unless the capability-link model is acceptable.
+
+## Verification
 
 ```bash
+npm run test
+npm run security-check
 npm run build
-npm start
 ```
 
-## API Notes
+The policy tests are dependency-free. CI additionally installs the backend/frontend lockfiles, checks active JavaScript syntax, runs the security scanner, and builds the frontend on Node 20.19 and 22.
+
+## API notes
+
+Key routes include:
 
 - `POST /api/auth/signup`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
 - `POST /api/projects`
-- `POST /api/projects/:id/retry`
 - `GET /api/projects/:id/export`
-- `GET /api/projects/:id/package`
 - `GET /api/projects/:id/bundle`
 - `POST /api/projects/:id/schedule`
 - `POST /api/projects/:id/share`
@@ -70,54 +101,26 @@ npm start
 - `GET /api/share/:token`
 - `POST /api/share/:token/review`
 - `GET /share/:token`
-- `GET /api/client-folders`
-- `POST /api/client-folders`
-- `POST /api/client-folders/:folderId/projects`
 - `GET /api/provider-catalog`
-- `GET /api/provider-catalog/:providerId/setup`
 - `POST /api/provider-catalog/:providerId/jobs`
-- `DELETE /api/projects/:id`
-- `GET /api/templates`
-- `GET /api/voiceover/voices`
-- `POST /api/voiceover/preview`
-- `POST /api/scene-assets`
-- `POST /api/scripts`
-- `POST /api/ai-script`
-- `POST /api/render`
-- `GET /api/analytics/summary`
-- `GET /api/brand-kit/me`
-- `POST /api/captions/optimize`
-- `GET /api/jobs`
 
-## Local Persistence
+## Persistence and deployment limits
 
-The backend stores MVP data in JSON files under `backend/data` by default. This keeps users, projects, subscriptions, brand kits, media metadata, jobs, settings, workspaces, and scheduled posts available after a restart while keeping setup simple.
+MVP records are stored in JSON files under `backend/data`; rendered files are written under `backend/storage` and generated assets under `backend/generated-assets`. These directories are ignored by Git.
 
-Rendered videos and subtitles are written to `backend/storage` and served from `/media`.
+This is not a production database or private object-storage design. Media paths are still served as static URLs and are not individually authorized. Before handling confidential assets, move them to authenticated storage with per-user authorization, retention controls, backups, and deletion workflows.
 
-## Production Connections To Add
+## Provider connections
 
-- Real LLM provider for scripts
-- Replace mock TTS audio with a real TTS provider such as Piper, Coqui TTS, ElevenLabs, Azure TTS, or a licensed XTTS/F5-TTS model
-- Real avatar/lip-sync/video provider such as SadTalker, MuseTalk, or a licensed hosted lip-sync API
-- Production database persistence such as PostgreSQL or Supabase
-- Stripe, Paddle, Razorpay, or local payment provider webhooks
-- Redis/BullMQ render workers for long-running jobs
-- Provider worker manifests from `/api/provider-catalog/:providerId/setup`
-- Safe provider dry-run jobs from `/api/provider-catalog/:providerId/jobs`
+Optional provider keys stay in `backend/.env` or a deployment secret manager. Never expose them through Vite variables or browser code. Review model, checkpoint, media, voice, and commercial-use licenses before enabling any provider.
 
-## Researched Provider Repos
+Reference projects previously considered include Piper, Coqui TTS, F5-TTS, SadTalker, MuseTalk, Wav2Lip, and Remotion. A provider catalog entry or dry run is not proof that production usage is licensed or safe.
 
-- Piper TTS: https://github.com/rhasspy/piper and current fork https://github.com/OHF-voice/piper1-gpl
-- Coqui TTS: https://github.com/coqui-ai/TTS
-- F5-TTS: https://github.com/SWivid/F5-TTS
-- SadTalker: https://github.com/OpenTalker/SadTalker
-- MuseTalk: https://github.com/TMElyralab/MuseTalk
-- Wav2Lip: https://github.com/Rudrabha/Wav2Lip
-- Remotion: https://github.com/remotion-dev/remotion
+## Safety boundaries
 
-Always review project, model, checkpoint, and media licenses before enabling a provider for paid/commercial usage.
+This project does not include account-spam automation, platform-rule bypassing, fake engagement, hidden publishing, or impersonation tooling. Model output and uploaded media remain untrusted. Real publishing, payments, biometric avatar creation, or third-party provider execution require separate authorization, consent, audit logging, and operational review.
 
-## Safety Boundaries
+See:
 
-This project does not include account spam automation, platform rule bypassing, fake engagement systems, or impersonation tooling.
+- [Reference review](docs/reference-review.md)
+- [Changed-area security audit](docs/security-audit.md)
